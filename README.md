@@ -372,4 +372,3 @@ python install.py
 ```
 
 The beauty of MCP is that it's **invisible infrastructure**. Users just chat, AI uses the tools automatically.
-```
