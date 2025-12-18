@@ -1,5 +1,5 @@
 {
-  "name": "Pylance MCP",
+  "name": "Pylance MCP Server",
   "logo": {
     "dark": "/logo/logo-dark.svg",
     "light": "/logo/logo-light.svg"
@@ -16,12 +16,12 @@
   "topbarLinks": [
     {
       "name": "Website",
-      "url": "https://pylancemcp.dev"
+      "url": "https://pylancemcp.com"
     }
   ],
   "topbarCtaButton": {
     "name": "Get Started",
-    "url": "https://pylancemcp.dev/#pricing"
+    "url": "https://pylancemcp.com/#pricing"
   },
   "tabs": [],
   "anchors": [
@@ -91,8 +91,8 @@
     }
   ],
   "footerSocials": {
-    "github": "https://github.com/yourusername/pylance-mcp-server",
+    "github": "https://github.com/jarrodai/pylance-mcp-server",
     "twitter": "https://twitter.com/pylancemcp",
-    "discord": "https://discord.gg/pylancemcp"
+    "discord": "https://pylancemcp.com"
   }
 }
