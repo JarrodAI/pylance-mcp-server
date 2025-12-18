@@ -1,0 +1,205 @@
+---
+title: Installation
+description: 'Complete installation guide for Pylance MCP Pro'
+---
+
+## Prerequisites
+
+Before installing Pylance MCP Pro, ensure you have:
+
+- **Python 3.11+** installed
+- **Node.js 18+** (for MCP client setup)
+- A supported MCP client (Claude Desktop, Cursor, Continue.dev, Windsurf)
+
+## Installation Methods
+
+<AccordionGroup>
+  <Accordion title="pip (Recommended)" icon="python">
+    Install directly from PyPI:
+
+    ```bash
+    pip install pylance-mcp-pro
+    ```
+
+    This will install the `pylance-mcp-pro` command globally.
+  </Accordion>
+
+  <Accordion title="pipx (Isolated)" icon="box">
+    Install in an isolated environment:
+
+    ```bash
+    pipx install pylance-mcp-pro
+    ```
+
+    Recommended for avoiding dependency conflicts.
+  </Accordion>
+
+  <Accordion title="From Source" icon="github">
+    Clone and install from GitHub:
+
+    ```bash
+    git clone https://github.com/JarrodAI/pylance-mcp.git
+    cd pylance-mcp
+    pip install -e .
+    ```
+
+    Useful for development or customization.
+  </Accordion>
+</AccordionGroup>
+
+## Verify Installation
+
+Check that the server is installed correctly:
+
+```bash
+pylance-mcp-pro --version
+```
+
+You should see the version number printed.
+
+## Configuration
+
+### 1. Set Workspace Root
+
+Set the `WORKSPACE_ROOT` environment variable to your Python project:
+
+```bash
+export WORKSPACE_ROOT=/path/to/your/project
+```
+
+Or configure it in your MCP client settings (see client-specific guides).
+
+### 2. API Key (Optional)
+
+If you purchased a subscription, set your API key:
+
+```bash
+export PYLANCE_MCP_API_KEY=plmc_your_api_key_here
+```
+
+Free tier is available without an API key with rate limits.
+
+### 3. Configure MCP Client
+
+Add the server to your MCP client configuration:
+
+```json
+{
+  "mcpServers": {
+    "pylance-mcp-pro": {
+      "command": "python",
+      "args": ["server.py"],
+      "env": {
+        "WORKSPACE_ROOT": "${workspaceFolder}",
+        "PYLANCE_MCP_API_KEY": "plmc_your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+<Info>
+  The `${workspaceFolder}` variable will be automatically replaced with your current workspace path in most MCP clients.
+</Info>
+
+## Client-Specific Setup
+
+<CardGroup cols={2}>
+  <Card
+    title="Claude Desktop"
+    icon="comment"
+    href="/guides/claude-desktop-setup"
+  >
+    Setup instructions for Claude Desktop
+  </Card>
+  <Card
+    title="Cursor"
+    icon="cursor"
+    href="/guides/cursor-setup"
+  >
+    Setup instructions for Cursor
+  </Card>
+  <Card
+    title="Continue.dev"
+    icon="forward"
+    href="/guides/continue-dev-setup"
+  >
+    Setup instructions for Continue.dev
+  </Card>
+  <Card
+    title="Windsurf"
+    icon="wind"
+    href="/guides/windsurf-setup"
+  >
+    Setup instructions for Windsurf
+  </Card>
+</CardGroup>
+
+## Testing the Installation
+
+Once configured, test the server with a simple command in your MCP client:
+
+```
+Can you analyze the Python files in my workspace and show me any type errors?
+```
+
+The AI should use the `get_diagnostics` tool and return type checking results.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Server not found" icon="circle-exclamation">
+    **Issue**: MCP client can't find the `pylance-mcp` command
+
+    **Solution**:
+    - Ensure Python is in your PATH
+    - Try using the full path: `/path/to/python -m pylance_mcp`
+    - Verify installation: `pip show pylance-mcp`
+  </Accordion>
+
+  <Accordion title="No Python files detected" icon="folder-open">
+    **Issue**: Server reports empty workspace
+
+    **Solution**:
+    - Verify `WORKSPACE_ROOT` points to a valid directory
+    - Ensure directory contains `.py` files
+    - Check file permissions
+  </Accordion>
+
+  <Accordion title="Type checking not working" icon="bug">
+    **Issue**: Diagnostics return empty results
+
+    **Solution**:
+    - Ensure Python environment is activated
+    - Check for `pyrightconfig.json` or `pyproject.toml`
+    - Verify Python interpreter path with `get_python_environment` tool
+  </Accordion>
+
+  <Accordion title="API rate limits" icon="clock">
+    **Issue**: Receiving rate limit errors
+
+    **Solution**:
+    - Sign up for a paid plan at [pylancemcp.com](https://pylancemcp.com)
+    - Add your API key to the environment configuration
+    - Check usage limits in your [dashboard](https://pylancemcp.com/dashboard)
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Quick Start"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Try common tasks and examples
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference/tools/get-completions"
+  >
+    Explore all available tools
+  </Card>
+</CardGroup>

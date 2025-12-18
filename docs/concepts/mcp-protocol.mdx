@@ -1,0 +1,120 @@
+---
+title: 'Model Context Protocol'
+description: 'Understanding the MCP protocol and how it enables AI-code integration'
+---
+
+## What is MCP?
+
+The Model Context Protocol (MCP) is the bridge that lets your AI assistant understand and work with your Python code intelligently.
+
+### What You Can Do
+
+<AccordionGroup>
+  <Accordion title="Get Smart Completions">
+    Your AI suggests code based on your project's actual types and imports
+  </Accordion>
+  
+  <Accordion title="Explore Your Code">
+    Ask about functions, classes, and see your project structure instantly
+  </Accordion>
+  
+  <Accordion title="Navigate Quickly">
+    Jump to definitions, find references, and understand code relationships
+  </Accordion>
+  
+  <Accordion title="Fix Errors Faster">
+    Get real-time diagnostics and explanations for errors
+  </Accordion>
+</AccordionGroup>
+
+## Features Available to You
+
+### Code Intelligence Tools
+
+Pylance MCP provides 15+ powerful features:
+
+<CardGroup cols={3}>
+  <Card title="get_completions" icon="list">
+    Code completion suggestions
+  </Card>
+  <Card title="get_hover" icon="info-circle">
+    Hover documentation
+  </Card>
+  <Card title="get_definition" icon="location-dot">
+    Go to definition
+  </Card>
+  <Card title="get_references" icon="link">
+    Find all references
+  </Card>
+  <Card title="rename_symbol" icon="pen">
+    Rename refactoring
+  </Card>
+  <Card title="get_diagnostics" icon="triangle-exclamation">
+    Errors and warnings
+  </Card>
+  <Card title="format_document" icon="align-left">
+    Code formatting
+  </Card>
+  <Card title="get_signature_help" icon="question">
+    Function signatures
+  </Card>
+  <Card title="get_code_actions" icon="bolt">
+    Quick fixes
+  </Card>
+</CardGroup>
+
+### What Information You Get
+
+When you use Pylance MCP, you get rich, detailed information automatically:
+
+<AccordionGroup>
+  <Accordion title="Your Workspace Context">
+    Pylance understands your project structure, Python version, and virtual environment
+  </Accordion>
+  
+  <Accordion title="Type Information">
+    See function signatures, parameter types, and return values
+  </Accordion>
+  
+  <Accordion title="Live Updates">
+    Changes in your code are detected and suggestions update instantly
+  </Accordion>
+</AccordionGroup>
+
+## Tips for Best Results
+
+<Check>
+  Work naturally - your IDE and AI handle the technical details
+</Check>
+
+<Check>
+  Results are cached automatically for instant repeated access
+</Check>
+
+<Check>
+  The system prevents excessive requests to protect your account
+</Check>
+
+### If Something Goes Wrong
+
+| Issue | What It Means | What To Do |
+|-------|---------------|------------|
+| File not found | Workspace path incorrect | Check your IDE workspace settings |
+| Invalid request | Configuration issue | Review the setup guide for your IDE |
+| Rate limit reached | Too many requests | Wait a moment, then try again |
+| Internal error | Temporary service issue | Retry in a few seconds |
+
+<Info>
+  Most issues resolve by restarting your IDE or checking your configuration.
+</Info>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Tool Reference" icon="wrench" href="/api-reference/tools/get-completions">
+    Explore all available tools
+  </Card>
+  <Card title="Setup Guide" icon="rocket" href="/guides/cursor-setup">
+    Configure your editor
+  </Card>
+</CardGroup>

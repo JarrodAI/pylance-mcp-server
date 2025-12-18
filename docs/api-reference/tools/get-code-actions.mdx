@@ -1,0 +1,410 @@
+---
+title: 'Get Code Actions'
+description: 'Get quick fixes and refactoring suggestions'
+api: 'POST /tools/get_code_actions'
+---
+
+## Overview
+
+Get actionable suggestions to fix errors, apply quick fixes, or refactor code. This provides the same "lightbulb" suggestions you see in your IDE.
+
+## Request
+
+<ParamField path="uri" type="string" required>
+  File URI (e.g., `file:///workspace/main.py`)
+</ParamField>
+
+<ParamField path="range" type="object" required>
+  Text range to get actions for
+  
+  <Expandable title="Range">
+    <ParamField path="start" type="object">
+      Start position (`line`, `character`)
+    </ParamField>
+    <ParamField path="end" type="object">
+      End position (`line`, `character`)
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="context" type="object">
+  Context for determining actions
+  
+  <Expandable title="Context">
+    <ParamField path="diagnostics" type="array">
+      Diagnostics (errors/warnings) in the range
+    </ParamField>
+    <ParamField path="only" type="array">
+      Filter to specific action kinds (e.g., `["quickfix"]`)
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Response
+
+<ResponseField name="actions" type="array">
+  Array of available code actions
+
+  <Expandable title="Code Action">
+    <ResponseField name="title" type="string">
+      Human-readable action title
+    </ResponseField>
+
+    <ResponseField name="kind" type="string">
+      Action type: `quickfix`, `refactor`, `refactor.extract`, `refactor.inline`, `source.organizeImports`
+    </ResponseField>
+
+    <ResponseField name="edit" type="object">
+      Workspace edit to apply
+      
+      <Expandable title="Workspace Edit">
+        <ResponseField name="changes" type="object">
+          Map of file URIs to text edits
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+
+    <ResponseField name="isPreferred" type="boolean">
+      Whether this is the recommended action
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example Request
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.pylancemcp.dev/v1/tools/call \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "get_code_actions",
+    "arguments": {
+      "uri": "file:///workspace/app/views.py",
+      "range": {
+        "start": {"line": 15, "character": 0},
+        "end": {"line": 15, "character": 30}
+      }
+    }
+  }'
+```
+
+```python Python
+from pylance_mcp import Client
+
+client = Client(api_key="YOUR_API_KEY")
+
+actions = client.get_code_actions(
+    uri="file:///workspace/app/views.py",
+    range={
+        "start": {"line": 15, "character": 0},
+        "end": {"line": 15, "character": 30}
+    }
+)
+
+for action in actions.actions:
+    if action.is_preferred:
+        print(f"✨ {action.title} (recommended)")
+    else:
+        print(f"  {action.title}")
+```
+
+```javascript JavaScript
+import { PylanceMCP } from '@pylance-mcp/client';
+
+const client = new PylanceMCP({ apiKey: 'YOUR_API_KEY' });
+
+const actions = await client.getCodeActions({
+  uri: 'file:///workspace/app/views.py',
+  range: {
+    start: { line: 15, character: 0 },
+    end: { line: 15, character: 30 }
+  }
+});
+
+actions.actions.forEach(action => {
+  const prefix = action.isPreferred ? '✨' : '  ';
+  console.log(`${prefix} ${action.title}`);
+});
+```
+
+```typescript TypeScript
+import { PylanceMCP, CodeActionsRequest } from '@pylance-mcp/client';
+
+const client = new PylanceMCP({ apiKey: process.env.PYLANCE_API_KEY! });
+
+const request: CodeActionsRequest = {
+  uri: 'file:///workspace/app/views.py',
+  range: {
+    start: { line: 15, character: 0 },
+    end: { line: 15, character: 30 }
+  }
+};
+
+const actions = await client.getCodeActions(request);
+
+for (const action of actions.actions) {
+  const prefix = action.isPreferred ? '✨' : '  ';
+  console.log(`${prefix} ${action.title}`);
+}
+```
+</CodeGroup>
+
+## Example Response
+
+```json
+{
+  "actions": [
+    {
+      "title": "Import 'List' from typing",
+      "kind": "quickfix",
+      "edit": {
+        "changes": {
+          "file:///workspace/app/views.py": [
+            {
+              "range": {
+                "start": { "line": 0, "character": 0 },
+                "end": { "line": 0, "character": 0 }
+              },
+              "newText": "from typing import List\n"
+            }
+          ]
+        }
+      },
+      "isPreferred": true
+    },
+    {
+      "title": "Add type annotation",
+      "kind": "refactor",
+      "edit": {
+        "changes": {
+          "file:///workspace/app/views.py": [
+            {
+              "range": {
+                "start": { "line": 15, "character": 15 },
+                "end": { "line": 15, "character": 15 }
+              },
+              "newText": ": List[Item]"
+            }
+          ]
+        }
+      },
+      "isPreferred": false
+    }
+  ]
+}
+```
+
+## Action Types
+
+### Quick Fixes
+
+Fix errors and warnings automatically:
+
+| Action | Fixes |
+|--------|-------|
+| **Add import** | `"List" is not defined` → Add `from typing import List` |
+| **Remove unused** | `Import "os" is not accessed` → Remove `import os` |
+| **Add type hint** | Missing type annotation → Add `: int` |
+| **Fix indentation** | Indentation error → Correct spacing |
+
+### Refactorings
+
+Transform code structure:
+
+| Action | Transform |
+|--------|-----------|
+| **Extract method** | Selection → New function |
+| **Extract variable** | Expression → Named variable |
+| **Inline variable** | Variable → Direct value |
+| **Convert to f-string** | `"Hello " + name` → `f"Hello {name}"` |
+
+### Source Actions
+
+Organize code:
+
+| Action | Effect |
+|--------|--------|
+| **Organize imports** | Sort and group imports |
+| **Remove unused imports** | Delete unreferenced imports |
+| **Add all missing imports** | Import all undefined names |
+| **Sort imports** | Alphabetically sort imports |
+
+## Use Cases
+
+### Auto-Fix Errors
+
+```python
+# Code with error:
+items = []  # List not imported
+
+# Get code actions at error location
+actions = client.get_code_actions(uri=file_uri, range=error_range)
+
+# Find and apply the "Add import" quickfix
+for action in actions.actions:
+    if action.kind == "quickfix" and "import" in action.title.lower():
+        apply_workspace_edit(action.edit)
+        print(f"✅ Applied: {action.title}")
+        break
+```
+
+### Extract Function
+
+```python
+# Select code to extract:
+# Lines 15-20 contain repeated calculation logic
+
+actions = client.get_code_actions(
+    uri=file_uri,
+    range={"start": {"line": 15, "character": 0}, 
+           "end": {"line": 20, "character": 50}}
+)
+
+# Find "Extract method" action
+for action in actions.actions:
+    if "extract" in action.kind.lower():
+        # Preview the change
+        print(f"Will create new function: {action.title}")
+        # Apply if desired
+        apply_workspace_edit(action.edit)
+```
+
+### Organize Imports
+
+```python
+# Organize all imports in a file
+actions = client.get_code_actions(
+    uri=file_uri,
+    range={"start": {"line": 0, "character": 0},
+           "end": {"line": 0, "character": 0}},
+    context={"only": ["source.organizeImports"]}
+)
+
+if actions.actions:
+    organize_action = actions.actions[0]
+    apply_workspace_edit(organize_action.edit)
+    print("✨ Imports organized")
+```
+
+### Convert String Formatting
+
+```python
+# Convert old-style formatting to f-strings
+# Before: message = "Hello " + name + "!"
+
+actions = client.get_code_actions(uri=file_uri, range=selection_range)
+
+for action in actions.actions:
+    if "f-string" in action.title.lower():
+        apply_workspace_edit(action.edit)
+        # After: message = f"Hello {name}!"
+        break
+```
+
+## Filtering Actions
+
+Request only specific action types:
+
+<CodeGroup>
+```python Quick Fixes Only
+actions = client.get_code_actions(
+    uri=file_uri,
+    range=range,
+    context={"only": ["quickfix"]}
+)
+```
+
+```python Refactorings Only
+actions = client.get_code_actions(
+    uri=file_uri,
+    range=range,
+    context={"only": ["refactor"]}
+)
+```
+
+```python Source Actions Only
+actions = client.get_code_actions(
+    uri=file_uri,
+    range=range,
+    context={"only": ["source"]}
+)
+```
+</CodeGroup>
+
+## Action Kinds
+
+Full list of action kinds:
+
+| Kind | Category | Examples |
+|------|----------|----------|
+| `quickfix` | Error fixes | Add import, fix syntax |
+| `refactor` | Code transformation | Extract, inline, rename |
+| `refactor.extract` | Extract operations | Extract method/variable |
+| `refactor.inline` | Inline operations | Inline variable/function |
+| `refactor.rewrite` | Rewrite patterns | Convert to f-string |
+| `source` | Source-level | Organize/sort code |
+| `source.organizeImports` | Import management | Sort and group imports |
+
+## Preferred Actions
+
+When multiple actions are available, `isPreferred: true` indicates the recommended one:
+
+```python
+# Get actions
+actions = client.get_code_actions(...)
+
+# Apply preferred action automatically
+preferred = next((a for a in actions.actions if a.is_preferred), None)
+if preferred:
+    apply_workspace_edit(preferred.edit)
+```
+
+## Performance Tips
+
+<Tip>
+  **Request on Demand**: Only fetch actions when user explicitly asks (lightbulb icon clicked)
+</Tip>
+
+<Tip>
+  **Use Filters**: Request specific action kinds to reduce response size
+</Tip>
+
+<Tip>
+  **Cache by Range**: Actions for same range don't change unless code changes
+</Tip>
+
+## Error Responses
+
+| Code | Reason | Solution |
+|------|--------|----------|
+| `FILE_NOT_FOUND` | File doesn't exist | Verify file path |
+| `INVALID_RANGE` | Range out of bounds | Check start/end positions |
+| `NO_ACTIONS_AVAILABLE` | No actions for this range | Try different selection |
+| `PARSE_ERROR` | Cannot parse file | Fix syntax errors first |
+
+## Rate Limits
+
+| Tier | Requests/Hour | Requests/Day |
+|------|---------------|--------------|
+| **Free** | 20 | 100 |
+| **Hobby** | 500 | 5,000 |
+| **Pro** | 5,000 | 50,000 |
+| **Enterprise** | Unlimited | Unlimited |
+
+## Related Tools
+
+<CardGroup cols={2}>
+  <Card title="Get Diagnostics" icon="triangle-exclamation" href="/api-reference/tools/get-diagnostics">
+    Find errors that need fixing
+  </Card>
+  <Card title="Apply Workspace Edit" icon="pen-to-square" href="/api-reference/tools/apply-workspace-edit">
+    Apply the action's edits
+  </Card>
+  <Card title="Rename Symbol" icon="pen" href="/api-reference/tools/rename-symbol">
+    Specialized rename refactoring
+  </Card>
+  <Card title="Format Document" icon="align-left" href="/api-reference/tools/format-document">
+    Auto-format code style
+  </Card>
+</CardGroup>

@@ -1,0 +1,260 @@
+---
+title: 'Get Hover'
+description: 'Get documentation and type information for symbols'
+api: 'POST /tools/get_hover'
+---
+
+## Overview
+
+Get detailed documentation, type information, and examples when hovering over any Python symbol. This provides the same information you see in your IDE's hover tooltips.
+
+## Request
+
+<ParamField path="uri" type="string" required>
+  File URI (e.g., `file:///workspace/main.py`)
+</ParamField>
+
+<ParamField path="line" type="number" required>
+  Line number (0-indexed)
+</ParamField>
+
+<ParamField path="character" type="number" required>
+  Character position (0-indexed)
+</ParamField>
+
+## Response
+
+<ResponseField name="contents" type="string">
+  Markdown-formatted documentation
+</ResponseField>
+
+<ResponseField name="range" type="object">
+  Text range of the hovered symbol
+  
+  <Expandable title="Range Object">
+    <ResponseField name="start" type="object">
+      Start position with `line` and `character`
+    </ResponseField>
+    <ResponseField name="end" type="object">
+      End position with `line` and `character`
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example Request
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.pylancemcp.dev/v1/tools/call \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "get_hover",
+    "arguments": {
+      "uri": "file:///workspace/app/utils.py",
+      "line": 15,
+      "character": 8
+    }
+  }'
+```
+
+```python Python
+from pylance_mcp import Client
+
+client = Client(api_key="YOUR_API_KEY")
+
+hover = client.get_hover(
+    uri="file:///workspace/app/utils.py",
+    line=15,
+    character=8
+)
+
+print(hover.contents)
+```
+
+```javascript JavaScript
+import { PylanceMCP } from '@pylance-mcp/client';
+
+const client = new PylanceMCP({ apiKey: 'YOUR_API_KEY' });
+
+const hover = await client.getHover({
+  uri: 'file:///workspace/app/utils.py',
+  line: 15,
+  character: 8
+});
+
+console.log(hover.contents);
+```
+
+```typescript TypeScript
+import { PylanceMCP, HoverRequest } from '@pylance-mcp/client';
+
+const client = new PylanceMCP({ apiKey: process.env.PYLANCE_API_KEY! });
+
+const request: HoverRequest = {
+  uri: 'file:///workspace/app/utils.py',
+  line: 15,
+  character: 8
+};
+
+const hover = await client.getHover(request);
+console.log(hover.contents);
+```
+</CodeGroup>
+
+## Example Response
+
+```json
+{
+  "contents": "```python\n(function) calculate_total(items: List[Item], tax_rate: float = 0.1, discount: float = 0) -> float\n```\n\nCalculate the total price of items with tax and discount.\n\n**Args:**\n- `items`: List of Item objects to calculate total for\n- `tax_rate`: Tax rate as decimal (default: 0.1 for 10%)\n- `discount`: Discount amount to subtract from subtotal\n\n**Returns:**\n- Final total after tax and discount\n\n**Raises:**\n- `ValueError`: If tax_rate is negative\n\n**Example:**\n```python\nitems = [Item(price=10.0), Item(price=20.0)]\ntotal = calculate_total(items, tax_rate=0.08)\nprint(total)  # 32.4\n```",
+  "range": {
+    "start": { "line": 15, "character": 4 },
+    "end": { "line": 15, "character": 19 }
+  }
+}
+```
+
+## What Information You Get
+
+<CardGroup cols={2}>
+  <Card title="Type Signatures" icon="code">
+    Function parameters, return types, and type hints
+  </Card>
+  <Card title="Documentation" icon="book">
+    Docstrings with descriptions, args, and examples
+  </Card>
+  <Card title="Usage Examples" icon="lightbulb">
+    Code snippets showing how to use the symbol
+  </Card>
+  <Card title="Error Info" icon="triangle-exclamation">
+    Possible exceptions and error conditions
+  </Card>
+</CardGroup>
+
+## Use Cases
+
+### Understand Function Parameters
+
+```python
+# Hover over 'calculate_total' to see:
+# - Parameter names and types
+# - Default values
+# - Return type
+# - Full documentation
+
+result = calculate_total(items, tax_rate=0.08)
+```
+
+### Check Variable Types
+
+```python
+# Hover over 'user' to see:
+# - Type: User
+# - Available methods
+# - Field information
+
+user = get_current_user()
+```
+
+### View Class Information
+
+```python
+# Hover over 'User' to see:
+# - Class definition
+# - Constructor signature
+# - Available methods and fields
+# - Inheritance hierarchy
+
+class AdminUser(User):
+    pass
+```
+
+### Inspect Import Sources
+
+```python
+# Hover over 'requests' to see:
+# - Module documentation
+# - Version information
+# - Available exports
+
+import requests
+```
+
+## Hover Content Format
+
+Hover information is returned as Markdown with syntax highlighting:
+
+### Function Signature
+```markdown
+```python
+(function) calculate_total(items: List[Item]) -> float
+```
+```
+
+### Documentation Sections
+```markdown
+Calculate total price with tax.
+
+**Args:**
+- `items`: List of items
+
+**Returns:**
+- Total price as float
+```
+
+### Code Examples
+```markdown
+**Example:**
+```python
+total = calculate_total([item1, item2])
+```
+```
+
+## Performance Tips
+
+<Tip>
+  **Cache by Symbol**: Cache hover results by symbol name to avoid duplicate requests
+</Tip>
+
+<Tip>
+  **Debounce Hover Events**: Wait 300-500ms before requesting hover to reduce API calls
+</Tip>
+
+<Tip>
+  **Request on Demand**: Only fetch hover when user explicitly hovers or requests it
+</Tip>
+
+## Error Responses
+
+| Code | Reason | Solution |
+|------|--------|----------|
+| `FILE_NOT_FOUND` | File doesn't exist | Verify file path is correct |
+| `INVALID_POSITION` | Position out of range | Check line/character bounds |
+| `NO_HOVER_INFO` | No symbol at position | Move to a valid symbol |
+| `WORKSPACE_NOT_LOADED` | Workspace still loading | Wait and retry |
+
+## Rate Limits
+
+| Tier | Requests/Hour | Requests/Day |
+|------|---------------|--------------|
+| **Free** | 20 | 100 |
+| **Hobby** | 500 | 5,000 |
+| **Pro** | 5,000 | 50,000 |
+| **Enterprise** | Unlimited | Unlimited |
+
+## Related Tools
+
+<CardGroup cols={2}>
+  <Card title="Get Completions" icon="list" href="/api-reference/tools/get-completions">
+    Get code completion suggestions
+  </Card>
+  <Card title="Get Definition" icon="location-dot" href="/api-reference/tools/get-definition">
+    Jump to symbol definition
+  </Card>
+  <Card title="Get Signature Help" icon="question" href="/api-reference/tools/get-signature-help">
+    Get parameter hints while typing
+  </Card>
+  <Card title="Get References" icon="link" href="/api-reference/tools/get-references">
+    Find all symbol references
+  </Card>
+</CardGroup>

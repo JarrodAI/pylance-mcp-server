@@ -1,0 +1,445 @@
+---
+title: 'Rename Symbol'
+description: 'Safely rename symbols across your entire project'
+api: 'POST /tools/rename_symbol'
+---
+
+## Overview
+
+Rename a Python symbol (function, class, variable, parameter, etc.) across your entire workspace. This tool finds all references and provides the exact text edits needed to rename safely.
+
+## Request
+
+<ParamField path="uri" type="string" required>
+  File URI (e.g., `file:///workspace/main.py`)
+</ParamField>
+
+<ParamField path="line" type="number" required>
+  Line number where symbol appears (0-indexed)
+</ParamField>
+
+<ParamField path="character" type="number" required>
+  Character position (0-indexed)
+</ParamField>
+
+<ParamField path="newName" type="string" required>
+  New name for the symbol
+</ParamField>
+
+## Response
+
+<ResponseField name="changes" type="object">
+  Map of file URIs to arrays of text edits
+
+  <Expandable title="Text Edit">
+    <ResponseField name="range" type="object">
+      Range to replace
+      
+      <Expandable title="Range">
+        <ResponseField name="start" type="object">
+          Start position (`line`, `character`)
+        </ResponseField>
+        <ResponseField name="end" type="object">
+          End position (`line`, `character`)
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+
+    <ResponseField name="newText" type="string">
+      New text to insert (the new symbol name)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="totalEdits" type="number">
+  Total number of edits across all files
+</ResponseField>
+
+<ResponseField name="filesAffected" type="number">
+  Number of files that will be modified
+</ResponseField>
+
+## Example Request
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.pylancemcp.dev/v1/tools/call \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "rename_symbol",
+    "arguments": {
+      "uri": "file:///workspace/app/utils.py",
+      "line": 8,
+      "character": 4,
+      "newName": "compute_total"
+    }
+  }'
+```
+
+```python Python
+from pylance_mcp import Client
+
+client = Client(api_key="YOUR_API_KEY")
+
+rename = client.rename_symbol(
+    uri="file:///workspace/app/utils.py",
+    line=8,
+    character=4,
+    new_name="compute_total"
+)
+
+print(f"Will modify {rename.files_affected} files")
+print(f"Total edits: {rename.total_edits}")
+
+# Apply the changes
+for file_uri, edits in rename.changes.items():
+    print(f"\nFile: {file_uri}")
+    for edit in edits:
+        print(f"  Line {edit.range.start.line}: '{edit.new_text}'")
+```
+
+```javascript JavaScript
+import { PylanceMCP } from '@pylance-mcp/client';
+
+const client = new PylanceMCP({ apiKey: 'YOUR_API_KEY' });
+
+const rename = await client.renameSymbol({
+  uri: 'file:///workspace/app/utils.py',
+  line: 8,
+  character: 4,
+  newName: 'compute_total'
+});
+
+console.log(`Will modify ${rename.filesAffected} files`);
+console.log(`Total edits: ${rename.totalEdits}`);
+
+// Apply the changes
+for (const [fileUri, edits] of Object.entries(rename.changes)) {
+  console.log(`\nFile: ${fileUri}`);
+  edits.forEach(edit => {
+    console.log(`  Line ${edit.range.start.line}: '${edit.newText}'`);
+  });
+}
+```
+
+```typescript TypeScript
+import { PylanceMCP, RenameRequest } from '@pylance-mcp/client';
+
+const client = new PylanceMCP({ apiKey: process.env.PYLANCE_API_KEY! });
+
+const request: RenameRequest = {
+  uri: 'file:///workspace/app/utils.py',
+  line: 8,
+  character: 4,
+  newName: 'compute_total'
+};
+
+const rename = await client.renameSymbol(request);
+
+console.log(`Will modify ${rename.filesAffected} files`);
+console.log(`Total edits: ${rename.totalEdits}`);
+
+// Apply the changes
+for (const [fileUri, edits] of Object.entries(rename.changes)) {
+  console.log(`\nFile: ${fileUri}`);
+  edits.forEach(edit => {
+    console.log(`  Line ${edit.range.start.line}: '${edit.newText}'`);
+  });
+}
+```
+</CodeGroup>
+
+## Example Response
+
+```json
+{
+  "changes": {
+    "file:///workspace/app/utils.py": [
+      {
+        "range": {
+          "start": { "line": 8, "character": 4 },
+          "end": { "line": 8, "character": 19 }
+        },
+        "newText": "compute_total"
+      }
+    ],
+    "file:///workspace/app/views.py": [
+      {
+        "range": {
+          "start": { "line": 42, "character": 12 },
+          "end": { "line": 42, "character": 27 }
+        },
+        "newText": "compute_total"
+      },
+      {
+        "range": {
+          "start": { "line": 87, "character": 8 },
+          "end": { "line": 87, "character": 23 }
+        },
+        "newText": "compute_total"
+      }
+    ],
+    "file:///workspace/tests/test_utils.py": [
+      {
+        "range": {
+          "start": { "line": 15, "character": 16 },
+          "end": { "line": 15, "character": 31 }
+        },
+        "newText": "compute_total"
+      }
+    ]
+  },
+  "totalEdits": 4,
+  "filesAffected": 3
+}
+```
+
+## Use Cases
+
+### Rename Function
+
+```python
+# Original: calculate_total
+def calculate_total(items: List[Item]) -> float:
+    return sum(item.price for item in items)
+
+# Rename to: compute_total
+# Result: All 47 references updated across 12 files
+
+def compute_total(items: List[Item]) -> float:
+    return sum(item.price for item in items)
+```
+
+### Rename Class
+
+```python
+# Original: UserModel
+class UserModel(BaseModel):
+    name: str
+    email: str
+
+# Rename to: User
+# Result: Class definition + all imports/usages updated
+
+class User(BaseModel):
+    name: str
+    email: str
+```
+
+### Rename Variable
+
+```python
+# Original: temp_data
+def process():
+    temp_data = fetch_data()
+    validate(temp_data)
+    return temp_data
+
+# Rename to: user_data
+# Result: All references in scope updated
+
+def process():
+    user_data = fetch_data()
+    validate(user_data)
+    return user_data
+```
+
+### Rename Parameter
+
+```python
+# Original: x
+def calculate(x: int, y: int) -> int:
+    return x + y
+
+# Rename to: amount
+# Result: Parameter + all references in function updated
+
+def calculate(amount: int, y: int) -> int:
+    return amount + y
+```
+
+## What Gets Renamed
+
+<CardGroup cols={2}>
+  <Card title="Definition" icon="code">
+    The original symbol definition
+  </Card>
+  <Card title="All References" icon="link">
+    Every place the symbol is used
+  </Card>
+  <Card title="Imports" icon="arrow-down">
+    Import statements are updated
+  </Card>
+  <Card title="String Literals" icon="quotes">
+    Not renamed (only code references)
+  </Card>
+</CardGroup>
+
+## Safety Features
+
+<Check>
+  **Scope-Aware**: Only renames symbols in the same scope
+</Check>
+
+<Check>
+  **Conflict Detection**: Warns if new name conflicts with existing symbols
+</Check>
+
+<Check>
+  **Atomic Operation**: All files updated together or none at all
+</Check>
+
+<Check>
+  **Preview First**: Get all edits before applying
+</Check>
+
+## Applying Edits
+
+The rename tool returns edits but doesn't apply them automatically. You need to apply the changes:
+
+<CodeGroup>
+```python Python - Apply Edits
+def apply_rename_edits(rename_result):
+    """Apply rename edits to files."""
+    for file_uri, edits in rename_result.changes.items():
+        file_path = file_uri.replace('file://', '')
+        
+        # Read file
+        with open(file_path, 'r') as f:
+            lines = f.readlines()
+        
+        # Apply edits in reverse order (bottom to top)
+        # This prevents line number shifts
+        for edit in sorted(edits, 
+                          key=lambda e: e.range.start.line, 
+                          reverse=True):
+            start = edit.range.start
+            end = edit.range.end
+            
+            # Get the line
+            line = lines[start.line]
+            
+            # Replace the text
+            new_line = (
+                line[:start.character] + 
+                edit.new_text + 
+                line[end.character:]
+            )
+            lines[start.line] = new_line
+        
+        # Write file
+        with open(file_path, 'w') as f:
+            f.writelines(lines)
+
+# Use it
+rename = client.rename_symbol(...)
+apply_rename_edits(rename)
+```
+
+```javascript JavaScript - Apply Edits
+import fs from 'fs/promises';
+
+async function applyRenameEdits(renameResult) {
+  for (const [fileUri, edits] of Object.entries(renameResult.changes)) {
+    const filePath = fileUri.replace('file://', '');
+    
+    // Read file
+    const content = await fs.readFile(filePath, 'utf8');
+    const lines = content.split('\n');
+    
+    // Apply edits in reverse order
+    const sortedEdits = edits.sort((a, b) => 
+      b.range.start.line - a.range.start.line
+    );
+    
+    for (const edit of sortedEdits) {
+      const start = edit.range.start;
+      const end = edit.range.end;
+      
+      const line = lines[start.line];
+      lines[start.line] = 
+        line.substring(0, start.character) +
+        edit.newText +
+        line.substring(end.character);
+    }
+    
+    // Write file
+    await fs.writeFile(filePath, lines.join('\n'));
+  }
+}
+
+// Use it
+const rename = await client.renameSymbol(...);
+await applyRenameEdits(rename);
+```
+</CodeGroup>
+
+## Validation
+
+Before renaming, the tool validates:
+
+| Check | Description |
+|-------|-------------|
+| **Symbol exists** | Position must point to a valid symbol |
+| **Valid name** | New name must be a valid Python identifier |
+| **No conflicts** | New name doesn't shadow existing symbols |
+| **Renameable** | Symbol can be renamed (not a keyword) |
+
+## Error Responses
+
+| Code | Reason | Solution |
+|------|--------|----------|
+| `INVALID_NAME` | New name is not valid Python | Use valid identifier (letters, numbers, underscore) |
+| `NAME_CONFLICT` | New name already exists | Choose a different name |
+| `NO_SYMBOL_FOUND` | No symbol at position | Position cursor on a valid symbol |
+| `CANNOT_RENAME` | Symbol cannot be renamed | Built-in symbols can't be renamed |
+| `WORKSPACE_NOT_INDEXED` | Workspace still indexing | Wait for indexing to complete |
+
+## Rate Limits
+
+| Tier | Requests/Hour | Requests/Day |
+|------|---------------|--------------|
+| **Free** | 5 | 25 |
+| **Hobby** | 100 | 1,000 |
+| **Pro** | 1,000 | 10,000 |
+| **Enterprise** | Unlimited | Unlimited |
+
+<Warning>
+  Rename operations are expensive. Use sparingly and cache results.
+</Warning>
+
+## Best Practices
+
+<Tip>
+  **Preview First**: Always review the changes before applying them
+</Tip>
+
+<Tip>
+  **Use Version Control**: Commit before renaming so you can revert if needed
+</Tip>
+
+<Tip>
+  **Test After**: Run tests after renaming to catch any issues
+</Tip>
+
+<Tip>
+  **Atomic Apply**: Apply all edits at once, not file by file
+</Tip>
+
+## Related Tools
+
+<CardGroup cols={2}>
+  <Card title="Get References" icon="link" href="/api-reference/tools/get-references">
+    Preview what will be renamed
+  </Card>
+  <Card title="Get Definition" icon="location-dot" href="/api-reference/tools/get-definition">
+    Find the symbol's definition
+  </Card>
+  <Card title="Apply Workspace Edit" icon="pen-to-square" href="/api-reference/tools/apply-workspace-edit">
+    Apply text edits to files
+  </Card>
+  <Card title="Get Diagnostics" icon="triangle-exclamation" href="/api-reference/tools/get-diagnostics">
+    Check for errors after renaming
+  </Card>
+</CardGroup>

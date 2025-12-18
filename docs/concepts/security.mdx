@@ -1,0 +1,255 @@
+---
+title: 'Security'
+description: 'Security features, best practices, and compliance'
+---
+
+## How Authentication Works
+
+When you use Pylance MCP, secure authentication happens automatically in the background.
+
+### What Gets Protected
+
+<CardGroup cols={2}>
+  <Card title="Your Workspace" icon="folder">
+    Only you can access your Python projects and code
+  </Card>
+  <Card title="Your Requests" icon="lock">
+    Each API call is authenticated and encrypted
+  </Card>
+  <Card title="Your Data" icon="shield">
+    Code analysis happens securely - nothing is shared
+  </Card>
+  <Card title="Your API Keys" icon="key">
+    Keys are hashed and never stored in plain text
+  </Card>
+</CardGroup>
+
+### Automatic Security Features
+
+Every request is protected:
+- ✅ Encrypted connections (TLS 1.3)
+- ✅ Secure token validation
+- ✅ Automatic session expiry
+- ✅ Rate limit protection
+- ✅ Workspace isolation
+
+## Authorization
+
+### Role-Based Access Control (RBAC)
+
+| Role | Permissions | Use Case |
+|------|-------------|----------|
+| **Free** | 100 requests/day | Personal projects |
+| **Hobby** | 5,000 requests/day | Side projects |
+| **Pro** | 50,000 requests/day | Professional development |
+| **Enterprise** | Unlimited | Large teams |
+
+### Workspace Isolation
+
+Each user's workspace is isolated:
+
+<AccordionGroup>
+  <Accordion title="File System Sandboxing">
+    Users can only access files within their workspace directory. No parent directory traversal.
+  </Accordion>
+  
+  <Accordion title="Process Isolation">
+    Pylance runs in a separate process per user with resource limits (CPU, memory).
+  </Accordion>
+  
+  <Accordion title="Network Restrictions">
+    No outbound network access from analysis processes. Only MCP server can make external calls.
+  </Accordion>
+</AccordionGroup>
+
+## Data Security
+
+### Encryption
+
+<CardGroup cols={2}>
+  <Card title="In Transit" icon="shield-halved">
+    All connections use TLS 1.3. No unencrypted traffic.
+  </Card>
+  <Card title="At Rest" icon="database">
+    PostgreSQL uses AES-256 encryption for stored data.
+  </Card>
+  <Card title="Environment Variables" icon="key">
+    Secrets stored in Railway/Fly.io encrypted vaults.
+  </Card>
+  <Card title="API Keys" icon="lock">
+    Hashed with bcrypt before database storage.
+  </Card>
+</CardGroup>
+
+### Data Retention
+
+| Data Type | Retention | Purpose |
+|-----------|-----------|---------|
+| User code | Session only | Analysis, not stored |
+| Request logs | 30 days | Debugging, auditing |
+| Usage metrics | 90 days | Billing, analytics |
+| Error reports | 7 days | Issue resolution |
+
+<Info>
+  **Your code never leaves your machine** when using local deployment. Cloud deployment analyzes code in memory only.
+</Info>
+
+## Rate Limiting
+
+Prevents abuse and ensures fair usage:
+
+```python
+# Rate limits by subscription tier
+FREE_TIER = {
+    "requests_per_day": 100,
+    "requests_per_hour": 20,
+    "concurrent_requests": 2
+}
+
+HOBBY_TIER = {
+    "requests_per_day": 5000,
+    "requests_per_hour": 500,
+    "concurrent_requests": 5
+}
+
+PRO_TIER = {
+    "requests_per_day": 50000,
+    "requests_per_hour": 5000,
+    "concurrent_requests": 20
+}
+```
+
+### Rate Limit Headers
+
+Responses include rate limit information:
+
+```http
+X-RateLimit-Limit: 5000
+X-RateLimit-Remaining: 4987
+X-RateLimit-Reset: 1703001600
+```
+
+## Vulnerability Management
+
+### Security Updates
+
+<Steps>
+  <Step title="Automated Dependency Scanning">
+    Dependabot monitors for CVEs in dependencies
+  </Step>
+  <Step title="Weekly Security Audits">
+    `npm audit` and `pip-audit` run in CI/CD
+  </Step>
+  <Step title="Rapid Patching">
+    Critical vulnerabilities patched within 24 hours
+  </Step>
+  <Step title="Notification">
+    Users notified via email for breaking changes
+  </Step>
+</Steps>
+
+### Responsible Disclosure
+
+Found a security issue? Email: **security@pylancemcp.dev**
+
+<Warning>
+  **Do not** open public GitHub issues for security vulnerabilities.
+</Warning>
+
+We typically respond within:
+- 🔴 Critical: 4 hours
+- 🟡 High: 24 hours
+- 🟢 Medium/Low: 72 hours
+
+## Compliance
+
+### GDPR Compliance
+
+<Check>Right to Access: Download your data via API</Check>
+<Check>Right to Erasure: Delete account removes all data</Check>
+<Check>Data Portability: Export in JSON format</Check>
+<Check>Privacy by Design: Minimal data collection</Check>
+
+### SOC 2 Type II
+
+Enterprise plan includes SOC 2 Type II compliance:
+- Annual third-party audits
+- Security controls documentation
+- Incident response procedures
+- Access logs and monitoring
+
+## Best Practices for Users
+
+### Protecting Your API Keys
+
+<Warning>
+  Never share your API keys or commit them to version control.
+</Warning>
+
+```bash
+# ✅ Store keys securely in your environment
+export PYLANCE_MCP_API_KEY="your_key_here"
+
+# ✅ Use your IDE's secure credential storage
+# Each IDE guide shows how to configure this safely
+```
+
+### Using the Service Securely
+
+<CardGroup cols={2}>
+  <Card title="Keep Keys Private" icon="key">
+    API keys are like passwords - never share them publicly or in screenshots
+  </Card>
+  <Card title="Review Permissions" icon="user-shield">
+    Only grant workspace access to projects you trust
+  </Card>
+  <Card title="Monitor Usage" icon="chart-line">
+    Check your dashboard regularly for unexpected activity
+  </Card>
+  <Card title="Update Regularly" icon="arrows-rotate">
+    Keep your MCP client and IDE extensions updated
+  </Card>
+</CardGroup>
+
+### If You Suspect a Security Issue
+
+<Steps>
+  <Step title="Rotate Your Keys">
+    Immediately generate new API keys from your dashboard
+  </Step>
+  <Step title="Review Activity">
+    Check your usage logs for suspicious requests
+  </Step>
+  <Step title="Contact Support">
+    Email security@pylancemcp.dev with details
+  </Step>
+  <Step title="Update Configurations">
+    Replace old keys in all your IDE configurations
+  </Step>
+</Steps>
+
+## Our Security Commitment
+
+We take security seriously:
+
+- 🔒 **Automatic Encryption**: All data encrypted in transit and at rest
+- 🛡️ **Regular Audits**: Independent security audits for Enterprise customers
+- ⚡ **Rapid Response**: Critical vulnerabilities patched within 24 hours
+- 📊 **Transparency**: Security updates communicated promptly
+
+## Additional Resources
+
+<CardGroup cols={2}>
+  <Card title="Clerk Security" icon="shield" href="https://clerk.com/docs/security">
+    Learn about Clerk's security features
+  </Card>
+  <Card title="OWASP Top 10" icon="list" href="https://owasp.org/Top10/">
+    Common web application security risks
+  </Card>
+  <Card title="Railway Security" icon="train" href="https://railway.app/legal/security">
+    Railway platform security
+  </Card>
+  <Card title="Fly.io Security" icon="plane" href="https://fly.io/docs/about/security/">
+    Fly.io infrastructure security
+  </Card>
+</CardGroup>

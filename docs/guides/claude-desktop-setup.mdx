@@ -1,0 +1,411 @@
+---
+title: 'Claude Desktop Setup'
+description: 'Configure Pylance MCP in Claude Desktop app'
+---
+
+## Prerequisites
+
+- Claude Desktop app installed
+- Pylance MCP Server running
+- Anthropic account with API access
+
+## Quick Start
+
+<Steps>
+  <Step title="Install Pylance MCP">
+    Install via pip:
+    ```bash
+    pip install pylance-mcp-server
+    ```
+  </Step>
+
+  <Step title="Configure Claude">
+    Edit Claude Desktop configuration:
+    
+    **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+    
+    **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+    
+    **Linux**: `~/.config/Claude/claude_desktop_config.json`
+
+    ```json
+    {
+      "mcpServers": {
+        "pylance": {
+          "command": "python",
+          "args": ["-m", "pylance_mcp.server"],
+          "env": {
+            "PYLANCE_WORKSPACE": "/path/to/your/python/project"
+          }
+        }
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Restart Claude Desktop">
+    Quit and reopen Claude Desktop app
+  </Step>
+
+  <Step title="Verify Setup">
+    In Claude chat, type:
+    ```
+    Can you analyze my Python workspace?
+    ```
+    
+    Claude should respond with workspace information.
+  </Step>
+</Steps>
+
+## Configuration Examples
+
+### Single Workspace
+
+```json claude_desktop_config.json
+{
+  "mcpServers": {
+    "pylance": {
+      "command": "python",
+      "args": ["-m", "pylance_mcp.server"],
+      "env": {
+        "PYLANCE_WORKSPACE": "/Users/you/projects/myapp",
+        "PYTHONPATH": "/Users/you/projects/myapp"
+      }
+    }
+  }
+}
+```
+
+### Multiple Workspaces
+
+```json claude_desktop_config.json
+{
+  "mcpServers": {
+    "pylance-backend": {
+      "command": "python",
+      "args": ["-m", "pylance_mcp.server", "--port", "3000"],
+      "env": {
+        "PYLANCE_WORKSPACE": "/Users/you/projects/backend"
+      }
+    },
+    "pylance-ml": {
+      "command": "python",
+      "args": ["-m", "pylance_mcp.server", "--port", "3001"],
+      "env": {
+        "PYLANCE_WORKSPACE": "/Users/you/projects/ml-models"
+      }
+    }
+  }
+}
+```
+
+### Cloud-Hosted
+
+```json claude_desktop_config.json
+{
+  "mcpServers": {
+    "pylance": {
+      "url": "https://api.pylancemcp.dev",
+      "headers": {
+        "Authorization": "Bearer YOUR_API_KEY",
+        "X-Workspace": "/path/to/workspace"
+      }
+    }
+  }
+}
+```
+
+<Info>
+  Get your API key from [pylancemcp.dev/dashboard](https://pylancemcp.dev/dashboard)
+</Info>
+
+## Usage Examples
+
+### Code Review
+
+Ask Claude to review your code:
+
+```
+@pylance review the authentication module in src/auth.py
+```
+
+Claude will analyze:
+- Type safety issues
+- Potential bugs
+- Security vulnerabilities
+- Code style consistency
+- Best practice violations
+
+### Refactoring Assistance
+
+Request refactoring help:
+
+```
+@pylance can you help refactor database.py to use async/await?
+```
+
+Claude will:
+1. Analyze current implementation
+2. Suggest refactoring approach
+3. Generate refactored code
+4. Explain changes made
+
+### Documentation Generation
+
+Generate docstrings:
+
+```
+@pylance generate docstrings for all functions in utils.py
+```
+
+Output:
+```python
+def calculate_total(items: List[Item]) -> float:
+    """
+    Calculate the total price of all items.
+    
+    Args:
+        items: List of Item objects containing price information
+        
+    Returns:
+        float: Sum of all item prices
+        
+    Raises:
+        ValueError: If items list is empty
+        
+    Example:
+        >>> items = [Item(price=10.0), Item(price=20.0)]
+        >>> calculate_total(items)
+        30.0
+    """
+    if not items:
+        raise ValueError("Items list cannot be empty")
+    return sum(item.price for item in items)
+```
+
+### Test Generation
+
+Generate unit tests:
+
+```
+@pylance create pytest tests for the User class in models/user.py
+```
+
+Claude generates comprehensive tests including:
+- Happy path scenarios
+- Edge cases
+- Error handling
+- Fixtures and mocks
+
+## Advanced Features
+
+### Context-Aware Conversations
+
+Claude maintains context across messages:
+
+```
+You: @pylance what's the User model structure?
+Claude: The User model has email, password_hash, created_at fields...
+
+You: Add a last_login field to it
+Claude: I'll add the last_login timestamp field to the User model...
+```
+
+### Multi-File Analysis
+
+Analyze dependencies across files:
+
+```
+@pylance trace how the login function works from API endpoint to database
+```
+
+Claude maps the flow:
+```
+api/auth.py:login_endpoint()
+  → services/auth.py:authenticate_user()
+    → models/user.py:User.verify_password()
+      → database.py:query_user_by_email()
+```
+
+### Intelligent Code Search
+
+Search using natural language:
+
+```
+@pylance find all database queries that aren't using prepared statements
+```
+
+Claude locates potential SQL injection vulnerabilities.
+
+## Conversation Templates
+
+### Bug Investigation
+
+```
+@pylance I'm getting a TypeError on line 45 of main.py. 
+The error message is: "unsupported operand type(s) for +: 'int' and 'str'"
+Can you help debug this?
+```
+
+### Feature Implementation
+
+```
+@pylance I need to add OAuth2 authentication to the API.
+Can you:
+1. Show me what files need to be modified
+2. Generate the necessary code
+3. Explain the security considerations
+```
+
+### Performance Optimization
+
+```
+@pylance This function is slow with large datasets:
+[paste code]
+Can you suggest optimizations and show benchmarks?
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="MCP Server Not Found">
+    **Error**: `Command 'python' not found`
+    
+    **Fix**: Use absolute path to Python:
+    ```json
+    {
+      "command": "/usr/local/bin/python3",
+      "args": ["-m", "pylance_mcp.server"]
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Workspace Not Loading">
+    **Error**: `Failed to initialize workspace`
+    
+    **Checklist**:
+    - ✅ Workspace path exists
+    - ✅ Path has no trailing slash
+    - ✅ User has read permissions
+    - ✅ Contains Python files (.py)
+  </Accordion>
+
+  <Accordion title="Authentication Failed">
+    **Error**: `401 Unauthorized`
+    
+    **Solutions**:
+    - Check API key is valid
+    - Verify subscription is active
+    - Ensure API key has correct permissions
+  </Accordion>
+
+  <Accordion title="Claude Not Responding">
+    **Symptoms**: No response to `@pylance` commands
+    
+    **Debug**:
+    1. Check Claude Desktop logs:
+       - macOS: `~/Library/Logs/Claude/`
+       - Windows: `%APPDATA%\Claude\logs\`
+    2. Verify MCP server is running:
+       ```bash
+       ps aux | grep pylance_mcp
+       ```
+    3. Test server manually:
+       ```bash
+       python -m pylance_mcp.server --test
+       ```
+  </Accordion>
+</AccordionGroup>
+
+## Performance Optimization
+
+### Large Workspaces
+
+For projects with >5,000 files:
+
+```json claude_desktop_config.json
+{
+  "mcpServers": {
+    "pylance": {
+      "command": "python",
+      "args": [
+        "-m", "pylance_mcp.server",
+        "--max-workers", "4",
+        "--cache-dir", "/tmp/pylance-cache"
+      ],
+      "env": {
+        "PYLANCE_WORKSPACE": "/path/to/large/project",
+        "PYLANCE_DIAGNOSTIC_MODE": "openFilesOnly"
+      }
+    }
+  }
+}
+```
+
+### Memory Limits
+
+Constrain memory usage:
+
+```json
+{
+  "env": {
+    "PYLANCE_MAX_MEMORY": "2048",  // MB
+    "PYLANCE_CACHE_SIZE": "500"     // MB
+  }
+}
+```
+
+## Security Best Practices
+
+<Warning>
+  **Never** commit `claude_desktop_config.json` with API keys to version control
+</Warning>
+
+Use environment variables:
+
+```json claude_desktop_config.json
+{
+  "mcpServers": {
+    "pylance": {
+      "url": "https://api.pylancemcp.dev",
+      "headers": {
+        "Authorization": "Bearer ${PYLANCE_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+Set in shell profile:
+```bash ~/.zshrc
+export PYLANCE_API_KEY="pk_live_..."
+```
+
+## Tips & Tricks
+
+<Tip>
+  **Tip 1**: Use `@pylance` at the start of messages for better context
+</Tip>
+
+<Tip>
+  **Tip 2**: Reference specific files: `@pylance analyze src/models/user.py`
+</Tip>
+
+<Tip>
+  **Tip 3**: Ask for alternatives: `@pylance show 3 ways to implement this function`
+</Tip>
+
+<Tip>
+  **Tip 4**: Request explanations: `@pylance explain this decorator pattern`
+</Tip>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Continue.dev Setup" icon="forward" href="/guides/continue-dev-setup">
+    Configure for VS Code
+  </Card>
+  <Card title="Custom Workspace" icon="gear" href="/guides/custom-workspace">
+    Advanced workspace configuration
+  </Card>
+</CardGroup>

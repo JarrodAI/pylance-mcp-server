@@ -1,0 +1,269 @@
+---
+title: 'Get Definition'
+description: 'Jump to where a symbol is defined'
+api: 'POST /tools/get_definition'
+---
+
+## Overview
+
+Find where a Python symbol (function, class, variable, etc.) is defined. This provides the "Go to Definition" functionality that lets you navigate to the source code of any symbol.
+
+## Request
+
+<ParamField path="uri" type="string" required>
+  File URI (e.g., `file:///workspace/main.py`)
+</ParamField>
+
+<ParamField path="line" type="number" required>
+  Line number (0-indexed)
+</ParamField>
+
+<ParamField path="character" type="number" required>
+  Character position (0-indexed)
+</ParamField>
+
+## Response
+
+<ResponseField name="locations" type="array">
+  Array of definition locations (usually just one)
+
+  <Expandable title="Location Object">
+    <ResponseField name="uri" type="string">
+      File URI where symbol is defined
+    </ResponseField>
+
+    <ResponseField name="range" type="object">
+      Text range of the definition
+      
+      <Expandable title="Range">
+        <ResponseField name="start" type="object">
+          Start position (`line`, `character`)
+        </ResponseField>
+        <ResponseField name="end" type="object">
+          End position (`line`, `character`)
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example Request
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.pylancemcp.dev/v1/tools/call \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "get_definition",
+    "arguments": {
+      "uri": "file:///workspace/app/views.py",
+      "line": 42,
+      "character": 15
+    }
+  }'
+```
+
+```python Python
+from pylance_mcp import Client
+
+client = Client(api_key="YOUR_API_KEY")
+
+definitions = client.get_definition(
+    uri="file:///workspace/app/views.py",
+    line=42,
+    character=15
+)
+
+for location in definitions.locations:
+    print(f"Defined at: {location.uri}")
+    print(f"Line: {location.range.start.line}")
+```
+
+```javascript JavaScript
+import { PylanceMCP } from '@pylance-mcp/client';
+
+const client = new PylanceMCP({ apiKey: 'YOUR_API_KEY' });
+
+const definitions = await client.getDefinition({
+  uri: 'file:///workspace/app/views.py',
+  line: 42,
+  character: 15
+});
+
+definitions.locations.forEach(location => {
+  console.log(`Defined at: ${location.uri}`);
+  console.log(`Line: ${location.range.start.line}`);
+});
+```
+
+```typescript TypeScript
+import { PylanceMCP, DefinitionRequest } from '@pylance-mcp/client';
+
+const client = new PylanceMCP({ apiKey: process.env.PYLANCE_API_KEY! });
+
+const request: DefinitionRequest = {
+  uri: 'file:///workspace/app/views.py',
+  line: 42,
+  character: 15
+};
+
+const definitions = await client.getDefinition(request);
+
+for (const location of definitions.locations) {
+  console.log(`Defined at: ${location.uri}`);
+  console.log(`Line: ${location.range.start.line}`);
+}
+```
+</CodeGroup>
+
+## Example Response
+
+```json
+{
+  "locations": [
+    {
+      "uri": "file:///workspace/app/models.py",
+      "range": {
+        "start": { "line": 15, "character": 6 },
+        "end": { "line": 15, "character": 10 }
+      }
+    }
+  ]
+}
+```
+
+## Use Cases
+
+### Navigate to Function Definition
+
+```python
+# In views.py, line 42:
+result = calculate_total(items)
+#        ^^^^^^^^^^^^^^
+# Get definition → Goes to utils.py where calculate_total is defined
+
+# Result:
+# file:///workspace/app/utils.py, line 8
+# def calculate_total(items: List[Item]) -> float:
+```
+
+### Find Class Definition
+
+```python
+# In views.py:
+user = User(name="John", email="john@example.com")
+#      ^^^^
+# Get definition → Goes to models.py
+
+# Result:
+# file:///workspace/app/models.py, line 25
+# class User(BaseModel):
+```
+
+### Jump to Import Source
+
+```python
+# In views.py:
+from app.utils import calculate_total
+#                     ^^^^^^^^^^^^^^
+# Get definition → Goes to utils.py
+
+# Result:
+# file:///workspace/app/utils.py, line 8
+```
+
+### Find Variable Declaration
+
+```python
+# In functions.py:
+total = calculate_total(items)
+# ... many lines later ...
+print(total)  # Where was total defined?
+#     ^^^^^
+# Get definition → Goes back to where total was assigned
+```
+
+## Multiple Definitions
+
+Some symbols may have multiple definitions (e.g., overloaded functions, re-exports):
+
+```json
+{
+  "locations": [
+    {
+      "uri": "file:///workspace/app/models.py",
+      "range": { "start": { "line": 15, "character": 6 }, "end": { "line": 15, "character": 10 } }
+    },
+    {
+      "uri": "file:///workspace/app/__init__.py",
+      "range": { "start": { "line": 3, "character": 0 }, "end": { "line": 3, "character": 23 } }
+    }
+  ]
+}
+```
+
+<Info>
+  When multiple definitions exist, the first one is typically the primary definition.
+</Info>
+
+## Definition Types
+
+| Symbol Type | What You Get |
+|-------------|--------------|
+| **Function** | The `def` statement where function is defined |
+| **Class** | The `class` statement where class is defined |
+| **Variable** | The line where variable is first assigned |
+| **Import** | The source file of the imported module/symbol |
+| **Method** | The method definition inside the class |
+| **Property** | The `@property` decorated method |
+
+## Performance Tips
+
+<Tip>
+  **Cache Definition Locations**: Store frequently accessed definitions to reduce lookups
+</Tip>
+
+<Tip>
+  **Batch Requests**: If checking multiple symbols, batch them in one request
+</Tip>
+
+<Tip>
+  **Workspace Indexing**: Initial workspace load may take time; subsequent lookups are fast
+</Tip>
+
+## Error Responses
+
+| Code | Reason | Solution |
+|------|--------|----------|
+| `FILE_NOT_FOUND` | File doesn't exist | Verify file path |
+| `INVALID_POSITION` | Position out of bounds | Check line/character values |
+| `NO_DEFINITION_FOUND` | No symbol at position | Move cursor to a valid symbol |
+| `EXTERNAL_DEFINITION` | Symbol defined in external library | Not available for external packages |
+| `WORKSPACE_NOT_LOADED` | Workspace still indexing | Wait and retry |
+
+## Rate Limits
+
+| Tier | Requests/Hour | Requests/Day |
+|------|---------------|--------------|
+| **Free** | 20 | 100 |
+| **Hobby** | 500 | 5,000 |
+| **Pro** | 5,000 | 50,000 |
+| **Enterprise** | Unlimited | Unlimited |
+
+## Related Tools
+
+<CardGroup cols={2}>
+  <Card title="Get References" icon="link" href="/api-reference/tools/get-references">
+    Find all places where a symbol is used
+  </Card>
+  <Card title="Get Hover" icon="info-circle" href="/api-reference/tools/get-hover">
+    See documentation without jumping
+  </Card>
+  <Card title="Get Type Definition" icon="t" href="/api-reference/tools/get-type-definition">
+    Go to type definition instead of value
+  </Card>
+  <Card title="Rename Symbol" icon="pen" href="/api-reference/tools/rename-symbol">
+    Rename symbol across entire project
+  </Card>
+</CardGroup>

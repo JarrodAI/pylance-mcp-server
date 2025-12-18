@@ -1,0 +1,309 @@
+---
+title: 'Get Signature Help'
+description: 'Get function parameter hints as you type'
+api: 'POST /tools/get_signature_help'
+---
+
+## Overview
+
+Get real-time parameter hints when calling functions or methods. This shows you parameter names, types, defaults, and documentation as you type arguments.
+
+## Request
+
+<ParamField path="uri" type="string" required>
+  File URI (e.g., `file:///workspace/main.py`)
+</ParamField>
+
+<ParamField path="line" type="number" required>
+  Line number (0-indexed)
+</ParamField>
+
+<ParamField path="character" type="number" required>
+  Character position (typically after `(` or `,`)
+</ParamField>
+
+## Response
+
+<ResponseField name="signatures" type="array">
+  Array of possible function signatures
+
+  <Expandable title="Signature">
+    <ResponseField name="label" type="string">
+      Full function signature
+    </ResponseField>
+
+    <ResponseField name="documentation" type="string">
+      Function documentation (docstring)
+    </ResponseField>
+
+    <ResponseField name="parameters" type="array">
+      Array of parameter information
+      
+      <Expandable title="Parameter">
+        <ResponseField name="label" type="string">
+          Parameter name and type
+        </ResponseField>
+        
+        <ResponseField name="documentation" type="string">
+          Parameter description from docstring
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="activeSignature" type="number">
+  Index of the active signature (for overloaded functions)
+</ResponseField>
+
+<ResponseField name="activeParameter" type="number">
+  Index of the current parameter being typed
+</ResponseField>
+
+## Example Request
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.pylancemcp.dev/v1/tools/call \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "get_signature_help",
+    "arguments": {
+      "uri": "file:///workspace/app/views.py",
+      "line": 42,
+      "character": 25
+    }
+  }'
+```
+
+```python Python
+from pylance_mcp import Client
+
+client = Client(api_key="YOUR_API_KEY")
+
+sig_help = client.get_signature_help(
+    uri="file:///workspace/app/views.py",
+    line=42,
+    character=25
+)
+
+for signature in sig_help.signatures:
+    print(f"Function: {signature.label}")
+    print(f"Current parameter: {signature.parameters[sig_help.active_parameter].label}")
+```
+
+```javascript JavaScript
+import { PylanceMCP } from '@pylance-mcp/client';
+
+const client = new PylanceMCP({ apiKey: 'YOUR_API_KEY' });
+
+const sigHelp = await client.getSignatureHelp({
+  uri: 'file:///workspace/app/views.py',
+  line: 42,
+  character: 25
+});
+
+sigHelp.signatures.forEach(signature => {
+  console.log(`Function: ${signature.label}`);
+  const param = signature.parameters[sigHelp.activeParameter];
+  console.log(`Current parameter: ${param.label}`);
+});
+```
+
+```typescript TypeScript
+import { PylanceMCP, SignatureHelpRequest } from '@pylance-mcp/client';
+
+const client = new PylanceMCP({ apiKey: process.env.PYLANCE_API_KEY! });
+
+const request: SignatureHelpRequest = {
+  uri: 'file:///workspace/app/views.py',
+  line: 42,
+  character: 25
+};
+
+const sigHelp = await client.getSignatureHelp(request);
+
+for (const signature of sigHelp.signatures) {
+  console.log(`Function: ${signature.label}`);
+  const param = signature.parameters[sigHelp.activeParameter];
+  console.log(`Current parameter: ${param.label}`);
+}
+```
+</CodeGroup>
+
+## Example Response
+
+```json
+{
+  "signatures": [
+    {
+      "label": "calculate_total(items: List[Item], tax_rate: float = 0.1, discount: float = 0) -> float",
+      "documentation": "Calculate the total price of items with tax and discount.\n\nArgs:\n    items: List of Item objects\n    tax_rate: Tax rate as decimal (default: 0.1)\n    discount: Discount amount to subtract\n\nReturns:\n    Final total after tax and discount",
+      "parameters": [
+        {
+          "label": "items: List[Item]",
+          "documentation": "List of Item objects"
+        },
+        {
+          "label": "tax_rate: float = 0.1",
+          "documentation": "Tax rate as decimal (default: 0.1)"
+        },
+        {
+          "label": "discount: float = 0",
+          "documentation": "Discount amount to subtract"
+        }
+      ]
+    }
+  ],
+  "activeSignature": 0,
+  "activeParameter": 1
+}
+```
+
+## Use Cases
+
+### While Typing Arguments
+
+```python
+# User types: calculate_total(items, |
+#                                    ^ cursor here
+# Shows: tax_rate: float = 0.1
+#        Tax rate as decimal (default: 0.1)
+
+calculate_total(items, 0.08)
+```
+
+### Multiple Parameters
+
+```python
+# User types: User.create(|
+#                        ^ cursor here
+# Shows all parameters with types and descriptions
+
+# After typing first arg: User.create("John", |
+#                                            ^ cursor here
+# Highlights second parameter: email: str
+
+User.create("John", "john@example.com", is_active=True)
+```
+
+### Overloaded Functions
+
+```python
+# Some functions have multiple signatures
+# activeSignature tells you which one matches
+
+@overload
+def process(data: str) -> str: ...
+
+@overload
+def process(data: int) -> int: ...
+
+# User types: process(|
+# Shows both signatures, highlights the one that matches
+```
+
+### Nested Function Calls
+
+```python
+# Signature help works in nested calls
+# User types: calculate_total(get_items(|
+#                                       ^ cursor here
+# Shows parameters for get_items()
+
+calculate_total(get_items(user_id=123), tax_rate=0.08)
+```
+
+## Active Parameter Tracking
+
+The `activeParameter` field tells you which parameter the cursor is on:
+
+| Position | Active Parameter | What's Shown |
+|----------|------------------|--------------|
+| `func(|` | 0 | First parameter |
+| `func(arg1, |` | 1 | Second parameter |
+| `func(arg1, arg2, |` | 2 | Third parameter |
+
+```python
+# Example: calculate_total(items, |
+#                                ^ activeParameter = 1
+# Highlights: tax_rate: float = 0.1
+
+# After typing: calculate_total(items, 0.08, |
+#                                            ^ activeParameter = 2
+# Highlights: discount: float = 0
+```
+
+## Signature Display Format
+
+Signatures include rich type information:
+
+### Simple Function
+```
+calculate_total(items: List[Item]) -> float
+```
+
+### With Defaults
+```
+calculate_total(items: List[Item], tax_rate: float = 0.1, discount: float = 0) -> float
+```
+
+### With Kwargs
+```
+create_user(name: str, email: str, **kwargs: Any) -> User
+```
+
+### Generic Types
+```
+process(data: T, transform: Callable[[T], U]) -> U
+```
+
+## Performance Tips
+
+<Tip>
+  **Trigger on Character**: Request signature help only when user types `(` or `,`
+</Tip>
+
+<Tip>
+  **Cache by Function**: Cache signature for same function to reduce API calls
+</Tip>
+
+<Tip>
+  **Debounce**: Wait 100-200ms after trigger character before requesting
+</Tip>
+
+## Error Responses
+
+| Code | Reason | Solution |
+|------|--------|----------|
+| `FILE_NOT_FOUND` | File doesn't exist | Verify file path |
+| `INVALID_POSITION` | Position out of bounds | Check line/character values |
+| `NO_SIGNATURE` | Not inside function call | Move to valid call expression |
+| `AMBIGUOUS_CALL` | Cannot determine function | Provide more context |
+
+## Rate Limits
+
+| Tier | Requests/Hour | Requests/Day |
+|------|---------------|--------------|
+| **Free** | 30 | 150 |
+| **Hobby** | 750 | 7,500 |
+| **Pro** | 7,500 | 75,000 |
+| **Enterprise** | Unlimited | Unlimited |
+
+## Related Tools
+
+<CardGroup cols={2}>
+  <Card title="Get Completions" icon="list" href="/api-reference/tools/get-completions">
+    Get function name suggestions
+  </Card>
+  <Card title="Get Hover" icon="info-circle" href="/api-reference/tools/get-hover">
+    See full documentation
+  </Card>
+  <Card title="Get Definition" icon="location-dot" href="/api-reference/tools/get-definition">
+    Jump to function definition
+  </Card>
+  <Card title="Get Diagnostics" icon="triangle-exclamation" href="/api-reference/tools/get-diagnostics">
+    Check for argument errors
+  </Card>
+</CardGroup>

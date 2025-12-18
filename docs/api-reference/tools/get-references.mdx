@@ -1,0 +1,318 @@
+---
+title: 'Get References'
+description: 'Find all places where a symbol is used'
+api: 'POST /tools/get_references'
+---
+
+## Overview
+
+Find every place in your workspace where a symbol (function, class, variable, etc.) is referenced. This is essential for understanding symbol usage, refactoring, and impact analysis.
+
+## Request
+
+<ParamField path="uri" type="string" required>
+  File URI (e.g., `file:///workspace/main.py`)
+</ParamField>
+
+<ParamField path="line" type="number" required>
+  Line number (0-indexed)
+</ParamField>
+
+<ParamField path="character" type="number" required>
+  Character position (0-indexed)
+</ParamField>
+
+<ParamField path="includeDeclaration" type="boolean" default="true">
+  Include the declaration/definition in results
+</ParamField>
+
+## Response
+
+<ResponseField name="locations" type="array">
+  Array of all reference locations
+
+  <Expandable title="Location Object">
+    <ResponseField name="uri" type="string">
+      File URI where symbol is referenced
+    </ResponseField>
+
+    <ResponseField name="range" type="object">
+      Text range of the reference
+      
+      <Expandable title="Range">
+        <ResponseField name="start" type="object">
+          Start position (`line`, `character`)
+        </ResponseField>
+        <ResponseField name="end" type="object">
+          End position (`line`, `character`)
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="totalCount" type="number">
+  Total number of references found
+</ResponseField>
+
+## Example Request
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.pylancemcp.dev/v1/tools/call \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "get_references",
+    "arguments": {
+      "uri": "file:///workspace/app/utils.py",
+      "line": 8,
+      "character": 4,
+      "includeDeclaration": true
+    }
+  }'
+```
+
+```python Python
+from pylance_mcp import Client
+
+client = Client(api_key="YOUR_API_KEY")
+
+references = client.get_references(
+    uri="file:///workspace/app/utils.py",
+    line=8,
+    character=4,
+    include_declaration=True
+)
+
+print(f"Found {references.total_count} references")
+for location in references.locations:
+    print(f"  {location.uri}:{location.range.start.line + 1}")
+```
+
+```javascript JavaScript
+import { PylanceMCP } from '@pylance-mcp/client';
+
+const client = new PylanceMCP({ apiKey: 'YOUR_API_KEY' });
+
+const references = await client.getReferences({
+  uri: 'file:///workspace/app/utils.py',
+  line: 8,
+  character: 4,
+  includeDeclaration: true
+});
+
+console.log(`Found ${references.totalCount} references`);
+references.locations.forEach(location => {
+  console.log(`  ${location.uri}:${location.range.start.line + 1}`);
+});
+```
+
+```typescript TypeScript
+import { PylanceMCP, ReferencesRequest } from '@pylance-mcp/client';
+
+const client = new PylanceMCP({ apiKey: process.env.PYLANCE_API_KEY! });
+
+const request: ReferencesRequest = {
+  uri: 'file:///workspace/app/utils.py',
+  line: 8,
+  character: 4,
+  includeDeclaration: true
+};
+
+const references = await client.getReferences(request);
+
+console.log(`Found ${references.totalCount} references`);
+for (const location of references.locations) {
+  console.log(`  ${location.uri}:${location.range.start.line + 1}`);
+}
+```
+</CodeGroup>
+
+## Example Response
+
+```json
+{
+  "locations": [
+    {
+      "uri": "file:///workspace/app/utils.py",
+      "range": {
+        "start": { "line": 8, "character": 4 },
+        "end": { "line": 8, "character": 19 }
+      }
+    },
+    {
+      "uri": "file:///workspace/app/views.py",
+      "range": {
+        "start": { "line": 42, "character": 12 },
+        "end": { "line": 42, "character": 27 }
+      }
+    },
+    {
+      "uri": "file:///workspace/app/views.py",
+      "range": {
+        "start": { "line": 87, "character": 8 },
+        "end": { "line": 87, "character": 23 }
+      }
+    },
+    {
+      "uri": "file:///workspace/tests/test_utils.py",
+      "range": {
+        "start": { "line": 15, "character": 16 },
+        "end": { "line": 15, "character": 31 }
+      }
+    }
+  ],
+  "totalCount": 4
+}
+```
+
+## Use Cases
+
+### Before Refactoring
+
+```python
+# Find all uses of calculate_total before renaming or modifying it
+def calculate_total(items: List[Item]) -> float:
+#   ^^^^^^^^^^^^^^
+# Get references: Find 47 uses across 12 files
+
+# Now you can safely refactor knowing the impact
+```
+
+### Understand Function Usage
+
+```python
+# Where is this helper function actually used?
+def format_currency(amount: float) -> str:
+    return f"${amount:.2f}"
+
+# Get references: Shows it's used in 3 different views
+```
+
+### Find Unused Code
+
+```python
+# Is this function still needed?
+def legacy_calculation(data: dict) -> int:
+    pass
+
+# Get references: 0 results
+# Safe to delete!
+```
+
+### Track Variable Usage
+
+```python
+# Where is this configuration used?
+MAX_RETRIES = 5
+# ^^^^^^^^^^^
+# Get references: Used in retry logic across 8 files
+```
+
+## Reference Types
+
+References are found in various contexts:
+
+| Context | Example |
+|---------|---------|
+| **Function calls** | `calculate_total(items)` |
+| **Imports** | `from utils import calculate_total` |
+| **Assignments** | `func = calculate_total` |
+| **Type hints** | `def process(calc: Callable = calculate_total)` |
+| **Decorators** | `@calculate_total` |
+| **String references** | Not included (only code references) |
+
+## Filtering Results
+
+<Info>
+  Results are ordered by file path, then by line number within each file.
+</Info>
+
+### Include/Exclude Declaration
+
+```python
+# With includeDeclaration: true
+# Results include:
+# 1. def calculate_total(...) [definition]
+# 2. calculate_total(items)   [usage 1]
+# 3. calculate_total(data)    [usage 2]
+
+# With includeDeclaration: false
+# Results include:
+# 1. calculate_total(items)   [usage 1]
+# 2. calculate_total(data)    [usage 2]
+```
+
+## Performance Tips
+
+<Tip>
+  **Large Projects**: First reference search may take 1-2 seconds while indexing workspace
+</Tip>
+
+<Tip>
+  **Cache Results**: Reference locations don't change unless code changes
+</Tip>
+
+<Tip>
+  **Use Filters**: Exclude test files if you only care about production usage
+</Tip>
+
+## Analyzing Results
+
+Group references by file to understand impact:
+
+```python
+from collections import defaultdict
+
+references_by_file = defaultdict(list)
+for location in references.locations:
+    file_path = location.uri.split('/')[-1]
+    references_by_file[file_path].append(location)
+
+# Show which files use this symbol most
+for file, refs in sorted(references_by_file.items(), 
+                         key=lambda x: len(x[1]), 
+                         reverse=True):
+    print(f"{file}: {len(refs)} references")
+```
+
+## Error Responses
+
+| Code | Reason | Solution |
+|------|--------|----------|
+| `FILE_NOT_FOUND` | File doesn't exist | Verify file path |
+| `INVALID_POSITION` | Position out of bounds | Check line/character values |
+| `NO_SYMBOL_FOUND` | No symbol at position | Position cursor on a valid symbol |
+| `WORKSPACE_NOT_INDEXED` | Workspace still indexing | Wait for indexing to complete |
+| `TIMEOUT` | Search took too long | Try narrowing search scope |
+
+## Rate Limits
+
+| Tier | Requests/Hour | Requests/Day | Max Results |
+|------|---------------|--------------|-------------|
+| **Free** | 10 | 50 | 100 |
+| **Hobby** | 250 | 2,500 | 1,000 |
+| **Pro** | 2,500 | 25,000 | 10,000 |
+| **Enterprise** | Unlimited | Unlimited | Unlimited |
+
+<Warning>
+  Large projects may return thousands of references. Consider pagination for better performance.
+</Warning>
+
+## Related Tools
+
+<CardGroup cols={2}>
+  <Card title="Get Definition" icon="location-dot" href="/api-reference/tools/get-definition">
+    Find where a symbol is defined
+  </Card>
+  <Card title="Rename Symbol" icon="pen" href="/api-reference/tools/rename-symbol">
+    Safely rename across all references
+  </Card>
+  <Card title="Get Hover" icon="info-circle" href="/api-reference/tools/get-hover">
+    See symbol documentation
+  </Card>
+  <Card title="Get Diagnostics" icon="triangle-exclamation" href="/api-reference/tools/get-diagnostics">
+    Find errors in your code
+  </Card>
+</CardGroup>

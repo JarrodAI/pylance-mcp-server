@@ -1,0 +1,307 @@
+---
+title: 'List Files'
+description: 'List all Python files in the workspace'
+api: 'GET /resources/files'
+---
+
+## Overview
+
+The `list-files` resource returns a comprehensive list of all Python files in your workspace, including metadata about each file.
+
+## Resource URI
+
+```
+pylance://workspace/files
+```
+
+## Request
+
+<ParamField path="uri" type="string" required>
+  Resource URI: `pylance://workspace/files`
+</ParamField>
+
+<ParamField query="filter" type="string">
+  Optional glob pattern to filter files (e.g., `**/models/*.py`)
+</ParamField>
+
+<ParamField query="includeTests" type="boolean" default="true">
+  Include test files in the results
+</ParamField>
+
+<ParamField query="excludePatterns" type="array">
+  Array of glob patterns to exclude (e.g., `["**/__pycache__/**", "**/node_modules/**"]`)
+</ParamField>
+
+## Response
+
+<ResponseField name="files" type="array">
+  Array of file objects in the workspace
+
+  <Expandable title="File Object">
+    <ResponseField name="path" type="string">
+      Absolute file path
+    </ResponseField>
+
+    <ResponseField name="relativePath" type="string">
+      Path relative to workspace root
+    </ResponseField>
+
+    <ResponseField name="size" type="number">
+      File size in bytes
+    </ResponseField>
+
+    <ResponseField name="lastModified" type="string">
+      ISO 8601 timestamp of last modification
+    </ResponseField>
+
+    <ResponseField name="isTest" type="boolean">
+      Whether the file is a test file (contains `test_` or `_test.py`)
+    </ResponseField>
+
+    <ResponseField name="language" type="string">
+      Language identifier (`python`, `python-stub`)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="totalCount" type="number">
+  Total number of Python files
+</ResponseField>
+
+<ResponseField name="workspaceRoot" type="string">
+  Absolute path to workspace root
+</ResponseField>
+
+## Example Request
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.pylancemcp.dev/v1/resources/read \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "uri": "pylance://workspace/files",
+    "params": {
+      "filter": "src/**/*.py",
+      "includeTests": false
+    }
+  }'
+```
+
+```python Python
+from pylance_mcp import MCPClient
+
+client = MCPClient(api_key="YOUR_API_KEY")
+
+files = client.read_resource(
+    uri="pylance://workspace/files",
+    filter="src/**/*.py",
+    includeTests=False
+)
+
+for file in files["files"]:
+    print(f"{file['relativePath']} - {file['size']} bytes")
+```
+
+```javascript JavaScript
+const { MCPClient } = require('@pylancemcp/client');
+
+const client = new MCPClient({ apiKey: 'YOUR_API_KEY' });
+
+const files = await client.readResource({
+  uri: 'pylance://workspace/files',
+  params: {
+    filter: 'src/**/*.py',
+    includeTests: false
+  }
+});
+
+files.files.forEach(file => {
+  console.log(`${file.relativePath} - ${file.size} bytes`);
+});
+```
+
+```typescript TypeScript
+import { MCPClient, ResourceResponse } from '@pylancemcp/client';
+
+const client = new MCPClient({ apiKey: 'YOUR_API_KEY' });
+
+interface FileResource extends ResourceResponse {
+  files: Array<{
+    path: string;
+    relativePath: string;
+    size: number;
+    lastModified: string;
+    isTest: boolean;
+    language: string;
+  }>;
+  totalCount: number;
+  workspaceRoot: string;
+}
+
+const files: FileResource = await client.readResource({
+  uri: 'pylance://workspace/files',
+  params: {
+    filter: 'src/**/*.py',
+    includeTests: false
+  }
+});
+```
+</CodeGroup>
+
+## Example Response
+
+```json
+{
+  "files": [
+    {
+      "path": "/workspace/src/main.py",
+      "relativePath": "src/main.py",
+      "size": 2048,
+      "lastModified": "2025-12-17T10:30:00Z",
+      "isTest": false,
+      "language": "python"
+    },
+    {
+      "path": "/workspace/src/models/user.py",
+      "relativePath": "src/models/user.py",
+      "size": 4096,
+      "lastModified": "2025-12-16T15:20:00Z",
+      "isTest": false,
+      "language": "python"
+    },
+    {
+      "path": "/workspace/src/utils/helpers.py",
+      "relativePath": "src/utils/helpers.py",
+      "size": 1536,
+      "lastModified": "2025-12-15T09:45:00Z",
+      "isTest": false,
+      "language": "python"
+    }
+  ],
+  "totalCount": 3,
+  "workspaceRoot": "/workspace"
+}
+```
+
+## Filter Patterns
+
+Use glob patterns to filter results:
+
+| Pattern | Description |
+|---------|-------------|
+| `**/*.py` | All Python files recursively |
+| `src/**/*.py` | All Python files in `src/` directory |
+| `**/test_*.py` | All test files starting with `test_` |
+| `models/*.py` | Python files directly in `models/` |
+| `!**/__pycache__/**` | Exclude `__pycache__` directories |
+
+## Common Use Cases
+
+### Get All Source Files
+
+```python
+files = client.read_resource(
+    uri="pylance://workspace/files",
+    filter="src/**/*.py",
+    excludePatterns=["**/test_*.py", "**/*_test.py"]
+)
+```
+
+### Find All Test Files
+
+```python
+tests = client.read_resource(
+    uri="pylance://workspace/files",
+    filter="**/test_*.py"
+)
+```
+
+### Get Files by Directory
+
+```python
+models = client.read_resource(
+    uri="pylance://workspace/files",
+    filter="src/models/**/*.py"
+)
+```
+
+## Performance Considerations
+
+<Info>
+  File listing is cached for 5 minutes. Changes to the workspace trigger automatic cache invalidation.
+</Info>
+
+<Warning>
+  Large workspaces (>10,000 files) may experience slower response times. Consider using more specific filter patterns.
+</Warning>
+
+### Optimization Tips
+
+<Check>Use specific filter patterns to reduce result size</Check>
+<Check>Exclude unnecessary directories (`__pycache__`, `.venv`, `node_modules`)</Check>
+<Check>Cache results on the client side when possible</Check>
+<Check>Use `includeTests=false` if test files aren't needed</Check>
+
+## Error Responses
+
+<ResponseExample>
+```json Workspace Not Found
+{
+  "error": {
+    "code": "WORKSPACE_NOT_FOUND",
+    "message": "Workspace directory does not exist",
+    "details": {
+      "workspaceRoot": "/invalid/path"
+    }
+  }
+}
+```
+
+```json Invalid Filter Pattern
+{
+  "error": {
+    "code": "INVALID_FILTER",
+    "message": "Invalid glob pattern",
+    "details": {
+      "pattern": "[invalid",
+      "reason": "Unclosed character class"
+    }
+  }
+}
+```
+
+```json Rate Limit Exceeded
+{
+  "error": {
+    "code": "RATE_LIMIT_EXCEEDED",
+    "message": "Too many requests",
+    "details": {
+      "limit": 5000,
+      "remaining": 0,
+      "resetAt": "2025-12-17T11:00:00Z"
+    }
+  }
+}
+```
+</ResponseExample>
+
+## Rate Limits
+
+| Tier | Requests/Day | Requests/Hour |
+|------|--------------|---------------|
+| Free | 100 | 20 |
+| Hobby | 5,000 | 500 |
+| Pro | 50,000 | 5,000 |
+| Enterprise | Unlimited | Unlimited |
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card title="Read File" icon="file" href="/api-reference/resources/read-file">
+    Read individual file contents
+  </Card>
+  <Card title="Workspace Structure" icon="folder-tree" href="/api-reference/resources/workspace-structure">
+    Get project structure overview
+  </Card>
+</CardGroup>

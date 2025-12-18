@@ -1,0 +1,315 @@
+---
+title: 'Cursor Setup'
+description: 'Configure Pylance MCP in Cursor IDE'
+---
+
+## Prerequisites
+
+- Cursor IDE installed
+- Pylance MCP Server running (local or cloud)
+- Active subscription (Hobby, Pro, or Enterprise)
+
+## Installation Steps
+
+<Steps>
+  <Step title="Install MCP Extension">
+    Open Cursor settings and enable MCP support:
+    ```bash
+    Cursor > Settings > Features > Model Context Protocol
+    ```
+    Toggle **Enable MCP** to ON
+  </Step>
+
+  <Step title="Configure MCP Server">
+    Create or edit `~/.cursor/mcp_config.json`:
+    ```json
+    {
+      "mcpServers": {
+        "pylance": {
+          "command": "python",
+          "args": ["-m", "pylance_mcp.server"],
+          "env": {
+            "PYTHONPATH": "/path/to/your/workspace"
+          }
+        }
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Authenticate">
+    On first use, Cursor will prompt for authentication:
+    1. Click **Sign in with Clerk**
+    2. Complete OAuth flow in browser
+    3. Return to Cursor
+  </Step>
+
+  <Step title="Verify Connection">
+    Open Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`):
+    ```
+    MCP: Check Server Status
+    ```
+    Should show: ✅ **Pylance MCP: Connected**
+  </Step>
+</Steps>
+
+## Configuration Options
+
+### Local Deployment
+
+For maximum privacy, run Pylance MCP locally:
+
+```json ~/.cursor/mcp_config.json
+{
+  "mcpServers": {
+    "pylance": {
+      "command": "python",
+      "args": ["-m", "pylance_mcp.server"],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "PYTHONWARNINGS": "ignore",
+        "MCP_PORT": "3000"
+      }
+    }
+  }
+}
+```
+
+### Cloud Deployment
+
+Connect to hosted Pylance MCP:
+
+```json ~/.cursor/mcp_config.json
+{
+  "mcpServers": {
+    "pylance": {
+      "url": "https://api.pylancemcp.dev",
+      "apiKey": "${PYLANCE_API_KEY}",
+      "workspace": "${workspaceFolder}"
+    }
+  }
+}
+```
+
+<Warning>
+  Never commit API keys to version control. Use environment variables or Cursor's secret storage.
+</Warning>
+
+## Usage Examples
+
+### Code Completion
+
+Type naturally and press `Tab` to accept suggestions:
+
+<CodeGroup>
+```python Before
+def calculate_
+```
+
+```python After (Tab)
+def calculate_total(items: List[Item]) -> float:
+    """Calculate total price of items."""
+    return sum(item.price for item in items)
+```
+</CodeGroup>
+
+### Hover Documentation
+
+Hover over any symbol for instant documentation:
+
+```python
+import requests  # Hover shows: "requests 2.31.0 - HTTP library"
+
+response = requests.get(url)  # Hover shows: get(url, params=None, **kwargs) -> Response
+```
+
+### Go to Definition
+
+`Cmd+Click` (Mac) or `Ctrl+Click` (Windows) on any symbol:
+
+```python
+from mymodule import MyClass  # Click "MyClass" → jumps to definition
+
+obj = MyClass()  # Click "MyClass" → jumps to definition
+```
+
+### Find References
+
+Right-click → **Find All References**:
+
+```python
+def important_function():  # Right-click here
+    pass
+
+# Shows all usages:
+# ├── main.py:45
+# ├── utils.py:12
+# └── tests/test_main.py:67
+```
+
+### Rename Symbol
+
+Right-click → **Rename Symbol** (`F2`):
+
+```python
+# Before
+old_name = 42
+
+# After renaming to "new_name"
+new_name = 42
+```
+
+All references update automatically across your workspace.
+
+## Advanced Features
+
+### Workspace Settings
+
+Configure per-workspace settings in `.cursor/workspace.json`:
+
+```json .cursor/workspace.json
+{
+  "pylanceMcp": {
+    "pythonPath": ".venv/bin/python",
+    "analysis": {
+      "typeCheckingMode": "strict",
+      "diagnosticMode": "workspace",
+      "stubPath": "typings"
+    },
+    "formatting": {
+      "provider": "black",
+      "lineLength": 100
+    }
+  }
+}
+```
+
+### Keybindings
+
+Customize keyboard shortcuts in `keybindings.json`:
+
+```json keybindings.json
+[
+  {
+    "key": "ctrl+space",
+    "command": "pylance.triggerCompletion",
+    "when": "editorTextFocus && editorLangId == python"
+  },
+  {
+    "key": "shift+f12",
+    "command": "pylance.findAllReferences",
+    "when": "editorTextFocus && editorLangId == python"
+  }
+]
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Server Not Starting">
+    **Symptoms**: "Failed to start Pylance MCP server"
+    
+    **Solutions**:
+    - Check Python is in PATH: `which python` or `where python`
+    - Verify installation: `python -m pylance_mcp.server --version`
+    - Check logs: `~/.cursor/logs/mcp-pylance.log`
+  </Accordion>
+
+  <Accordion title="No Completions">
+    **Symptoms**: No autocomplete suggestions appear
+    
+    **Solutions**:
+    - Ensure file is saved (Pylance analyzes saved files)
+    - Check file encoding (must be UTF-8)
+    - Restart Cursor: `Cmd+Shift+P` → "Reload Window"
+    - Clear cache: Delete `~/.cursor/cache/pylance/`
+  </Accordion>
+
+  <Accordion title="Slow Performance">
+    **Symptoms**: Completions take >2 seconds
+    
+    **Solutions**:
+    - Reduce `diagnosticMode` to "openFilesOnly"
+    - Exclude large directories in `.cursorignore`:
+      ```
+      node_modules/
+      .venv/
+      __pycache__/
+      *.pyc
+      ```
+    - Upgrade subscription tier for higher rate limits
+  </Accordion>
+
+  <Accordion title="Authentication Errors">
+    **Symptoms**: "Unauthorized" or "Invalid API key"
+    
+    **Solutions**:
+    - Log out and log back in: `Cmd+Shift+P` → "MCP: Sign Out"
+    - Check subscription status at https://pylancemcp.dev/dashboard
+    - Verify API key hasn't expired
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<Check>
+  **Enable Auto-Save**: Pylance analyzes saved files for best results
+</Check>
+
+<Check>
+  **Use Type Hints**: Add type annotations for better completions
+</Check>
+
+<Check>
+  **Organize Imports**: Keep imports at top of file for faster analysis
+</Check>
+
+<Check>
+  **Configure .cursorignore**: Exclude virtual environments and caches
+</Check>
+
+<Warning>
+  **Large Workspaces**: Workspaces >10,000 files may need `diagnosticMode: "openFilesOnly"`
+</Warning>
+
+## Performance Tips
+
+Optimize Cursor for large Python projects:
+
+```json settings.json
+{
+  "pylance.analysis.memory.keepLibraryAst": false,
+  "pylance.analysis.memory.keepLibraryLocalVariables": false,
+  "pylance.analysis.extraCommitChars": false,
+  "pylance.analysis.completeFunctionParens": true,
+  "files.watcherExclude": {
+    "**/.git/**": true,
+    "**/.venv/**": true,
+    "**/node_modules/**": true,
+    "**/__pycache__/**": true
+  }
+}
+```
+
+## Video Tutorial
+
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/example"
+  title="Cursor + Pylance MCP Setup"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowfullscreen
+></iframe>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="book" href="/api-reference/tools/get-completions">
+    Explore all available tools
+  </Card>
+  <Card title="Custom Workspace" icon="folder-tree" href="/guides/custom-workspace">
+    Configure workspace settings
+  </Card>
+</CardGroup>

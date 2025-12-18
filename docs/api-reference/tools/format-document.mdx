@@ -1,0 +1,421 @@
+---
+title: 'Format Document'
+description: 'Automatically format Python code to match style guidelines'
+api: 'POST /tools/format_document'
+---
+
+## Overview
+
+Automatically format your Python code according to PEP 8 style guidelines. This tool provides the same formatting you get from tools like Black, autopep8, or yapf.
+
+## Request
+
+<ParamField path="uri" type="string" required>
+  File URI (e.g., `file:///workspace/main.py`)
+</ParamField>
+
+<ParamField path="options" type="object">
+  Formatting options
+  
+  <Expandable title="Format Options">
+    <ParamField path="tabSize" type="number" default="4">
+      Number of spaces per indentation level
+    </ParamField>
+    
+    <ParamField path="insertSpaces" type="boolean" default="true">
+      Use spaces instead of tabs
+    </ParamField>
+    
+    <ParamField path="lineLength" type="number" default="88">
+      Maximum line length (Black default: 88, PEP 8: 79)
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Response
+
+<ResponseField name="edits" type="array">
+  Array of text edits to apply
+
+  <Expandable title="Text Edit">
+    <ResponseField name="range" type="object">
+      Range to replace
+      
+      <Expandable title="Range">
+        <ResponseField name="start" type="object">
+          Start position (`line`, `character`)
+        </ResponseField>
+        <ResponseField name="end" type="object">
+          End position (`line`, `character`)
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+
+    <ResponseField name="newText" type="string">
+      Formatted text to insert
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="totalEdits" type="number">
+  Number of changes made
+</ResponseField>
+
+## Example Request
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.pylancemcp.dev/v1/tools/call \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "format_document",
+    "arguments": {
+      "uri": "file:///workspace/app/utils.py",
+      "options": {
+        "tabSize": 4,
+        "insertSpaces": true,
+        "lineLength": 88
+      }
+    }
+  }'
+```
+
+```python Python
+from pylance_mcp import Client
+
+client = Client(api_key="YOUR_API_KEY")
+
+formatted = client.format_document(
+    uri="file:///workspace/app/utils.py",
+    options={
+        "tab_size": 4,
+        "insert_spaces": True,
+        "line_length": 88
+    }
+)
+
+print(f"Made {formatted.total_edits} formatting changes")
+
+# Apply the edits
+for edit in formatted.edits:
+    print(f"Line {edit.range.start.line}: Formatting update")
+```
+
+```javascript JavaScript
+import { PylanceMCP } from '@pylance-mcp/client';
+
+const client = new PylanceMCP({ apiKey: 'YOUR_API_KEY' });
+
+const formatted = await client.formatDocument({
+  uri: 'file:///workspace/app/utils.py',
+  options: {
+    tabSize: 4,
+    insertSpaces: true,
+    lineLength: 88
+  }
+});
+
+console.log(`Made ${formatted.totalEdits} formatting changes`);
+```
+
+```typescript TypeScript
+import { PylanceMCP, FormatDocumentRequest } from '@pylance-mcp/client';
+
+const client = new PylanceMCP({ apiKey: process.env.PYLANCE_API_KEY! });
+
+const request: FormatDocumentRequest = {
+  uri: 'file:///workspace/app/utils.py',
+  options: {
+    tabSize: 4,
+    insertSpaces: true,
+    lineLength: 88
+  }
+};
+
+const formatted = await client.formatDocument(request);
+console.log(`Made ${formatted.totalEdits} formatting changes`);
+```
+</CodeGroup>
+
+## Example Response
+
+```json
+{
+  "edits": [
+    {
+      "range": {
+        "start": { "line": 5, "character": 0 },
+        "end": { "line": 5, "character": 47 }
+      },
+      "newText": "def calculate_total(items: List[Item], tax_rate: float = 0.1) -> float:"
+    },
+    {
+      "range": {
+        "start": { "line": 8, "character": 8 },
+        "end": { "line": 8, "character": 65 }
+      },
+      "newText": "    return sum(item.price for item in items) * (1 + tax_rate)"
+    }
+  ],
+  "totalEdits": 2
+}
+```
+
+## What Gets Formatted
+
+<CardGroup cols={2}>
+  <Card title="Indentation" icon="indent">
+    Consistent spaces/tabs and nesting levels
+  </Card>
+  <Card title="Line Length" icon="ruler-horizontal">
+    Wraps long lines to stay under limit
+  </Card>
+  <Card title="Spacing" icon="arrows-left-right">
+    Proper spacing around operators and commas
+  </Card>
+  <Card title="Imports" icon="arrow-down">
+    Organizes and sorts import statements
+  </Card>
+</CardGroup>
+
+## Formatting Examples
+
+### Before and After
+
+<CodeGroup>
+```python Before
+def calculate_total(items,tax_rate=0.1,discount=0)->float:
+    subtotal=sum([item.price for item in items])
+    tax=subtotal*tax_rate
+    return subtotal+tax-discount
+
+
+class   User:
+    def __init__(self,name,email):
+        self.name=name
+        self.email=email
+```
+
+```python After
+def calculate_total(
+    items: List[Item], tax_rate: float = 0.1, discount: float = 0
+) -> float:
+    subtotal = sum([item.price for item in items])
+    tax = subtotal * tax_rate
+    return subtotal + tax - discount
+
+
+class User:
+    def __init__(self, name: str, email: str):
+        self.name = name
+        self.email = email
+```
+</CodeGroup>
+
+### Import Organization
+
+<CodeGroup>
+```python Before
+import os
+from typing import List
+import sys
+from app.models import User
+import json
+from app.utils import calculate
+```
+
+```python After
+import json
+import os
+import sys
+from typing import List
+
+from app.models import User
+from app.utils import calculate
+```
+</CodeGroup>
+
+### Line Wrapping
+
+<CodeGroup>
+```python Before
+result = some_function(first_parameter, second_parameter, third_parameter, fourth_parameter, fifth_parameter)
+```
+
+```python After (line_length: 88)
+result = some_function(
+    first_parameter,
+    second_parameter,
+    third_parameter,
+    fourth_parameter,
+    fifth_parameter,
+)
+```
+</CodeGroup>
+
+## Formatting Styles
+
+Choose your preferred line length:
+
+| Style | Line Length | Description |
+|-------|-------------|-------------|
+| **Black** | 88 | Modern, opinionated formatter |
+| **PEP 8** | 79 | Traditional Python standard |
+| **Google** | 80 | Google Python Style Guide |
+| **Custom** | Any | Your preferred maximum |
+
+## Use Cases
+
+### Format on Save
+
+```python
+# Auto-format every time you save a file
+def on_file_save(file_uri):
+    formatted = client.format_document(uri=file_uri)
+    
+    if formatted.total_edits > 0:
+        apply_edits(file_uri, formatted.edits)
+        print(f"✨ Formatted {file_uri}")
+```
+
+### Pre-Commit Hook
+
+```python
+# Format all changed files before committing
+def format_changed_files():
+    changed_files = get_git_changed_files()
+    python_files = [f for f in changed_files if f.endswith('.py')]
+    
+    for file in python_files:
+        formatted = client.format_document(uri=file)
+        if formatted.total_edits > 0:
+            apply_edits(file, formatted.edits)
+            print(f"📝 Formatted {file}")
+    
+    return len(python_files)
+```
+
+### Code Review Automation
+
+```python
+# Check if code follows formatting standards
+def check_formatting_compliance(file_uri):
+    formatted = client.format_document(uri=file_uri)
+    
+    if formatted.total_edits == 0:
+        return {"compliant": True, "message": "✅ Code is properly formatted"}
+    else:
+        return {
+            "compliant": False,
+            "message": f"❌ {formatted.total_edits} formatting issues found",
+            "fixes": formatted.edits
+        }
+```
+
+## Configuration Options
+
+### Tab Size
+
+```python
+# Use 2-space indentation (not recommended for Python)
+formatted = client.format_document(
+    uri=file_uri,
+    options={"tab_size": 2}
+)
+
+# Standard 4-space indentation
+formatted = client.format_document(
+    uri=file_uri,
+    options={"tab_size": 4}
+)
+```
+
+### Line Length
+
+```python
+# Strict PEP 8 (79 characters)
+formatted = client.format_document(
+    uri=file_uri,
+    options={"line_length": 79}
+)
+
+# Black style (88 characters)
+formatted = client.format_document(
+    uri=file_uri,
+    options={"line_length": 88}
+)
+
+# More permissive (120 characters)
+formatted = client.format_document(
+    uri=file_uri,
+    options={"line_length": 120}
+)
+```
+
+## Performance Tips
+
+<Tip>
+  **Format on Demand**: Don't format constantly - only on save or commit
+</Tip>
+
+<Tip>
+  **Cache Results**: If file hasn't changed, formatting result is the same
+</Tip>
+
+<Tip>
+  **Batch Format**: Format multiple files in sequence, not parallel
+</Tip>
+
+## Error Responses
+
+| Code | Reason | Solution |
+|------|--------|----------|
+| `FILE_NOT_FOUND` | File doesn't exist | Verify file path |
+| `PARSE_ERROR` | File has syntax errors | Fix syntax errors first |
+| `INVALID_OPTIONS` | Formatting options invalid | Check option values |
+| `FILE_TOO_LARGE` | File exceeds size limit | Split into smaller files |
+
+## Rate Limits
+
+| Tier | Requests/Hour | Requests/Day | Max File Size |
+|------|---------------|--------------|---------------|
+| **Free** | 20 | 100 | 100KB |
+| **Hobby** | 500 | 5,000 | 500KB |
+| **Pro** | 5,000 | 50,000 | 1MB |
+| **Enterprise** | Unlimited | Unlimited | 10MB |
+
+## Best Practices
+
+<Check>
+  **Team Consistency**: Use the same line length across your team
+</Check>
+
+<Check>
+  **Version Control**: Configure formatting before committing to avoid large diffs
+</Check>
+
+<Check>
+  **IDE Integration**: Set up format-on-save in your editor
+</Check>
+
+<Check>
+  **CI/CD**: Add formatting checks to your build pipeline
+</Check>
+
+## Related Tools
+
+<CardGroup cols={2}>
+  <Card title="Get Diagnostics" icon="triangle-exclamation" href="/api-reference/tools/get-diagnostics">
+    Check for style violations
+  </Card>
+  <Card title="Apply Workspace Edit" icon="pen-to-square" href="/api-reference/tools/apply-workspace-edit">
+    Apply formatting changes
+  </Card>
+  <Card title="Get Code Actions" icon="bolt" href="/api-reference/tools/get-code-actions">
+    Get quick fixes for issues
+  </Card>
+  <Card title="Rename Symbol" icon="pen" href="/api-reference/tools/rename-symbol">
+    Refactor code safely
+  </Card>
+</CardGroup>

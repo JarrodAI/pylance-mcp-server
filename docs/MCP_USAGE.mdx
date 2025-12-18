@@ -1,0 +1,75 @@
+# Pylance MCP Pro
+
+**Professional Python Intelligence Server with Advanced Features**
+
+A production-ready Model Context Protocol (MCP) server that exposes Pylance/Pyright language server capabilities with OpenTelemetry tracing and conversation logging.
+
+## 🎯 Quick Start in VS Code
+
+This server is **already running** if you see "Discovered 12 tools" in the output!
+
+### How to Use in Copilot Chat:
+
+1. **Open Copilot Chat** (Ctrl+Alt+I)
+2. **Click the 🔧 tools icon** in the chat input area
+3. **Your tools are listed there!** Look for "pylance-mcp-pro"
+
+### Available in Chat:
+
+Just ask natural questions:
+- "What's the type of this variable?"
+- "Show me all references to this function"
+- "Are there any type errors in this file?"
+- "Get completions for line 42"
+
+The tools will be used automatically by Copilot!
+
+## 🛠️ Available Tools (12)
+
+1. **get_completions** - Intelligent code completions
+2. **get_hover** - Type hints and documentation
+3. **get_definition** - Go to definition
+4. **get_references** - Find all references
+5. **rename_symbol** - Rename refactoring
+6. **get_diagnostics** - Errors and warnings
+7. **format_document** - Code formatting
+8. **apply_workspace_edit** - Apply changes
+9. **get_signature_help** - Function signatures
+10. **get_document_symbols** - File outline
+11. **get_workspace_symbols** - Symbol search
+12. **health_check** - Server status
+
+## 📊 Features
+
+- ✅ Full Pylance/Pyright integration
+- ✅ OpenTelemetry tracing enabled
+- ✅ Conversation logging
+- ✅ Automatic Python environment detection
+- ✅ Virtual environment support
+
+## 🔍 Verify Installation
+
+Check VS Code Output panel:
+- View → Output → Select "pylance-mcp-pro"
+- Should show: "Starting server pylance-mcp-pro"
+- Should show: "Discovered 12 tools"
+
+## 📝 Configuration
+
+Located in VS Code settings.json:
+```json
+"mcpServers": {
+  "pylance-mcp-pro": {
+    "command": "path/to/python.exe",
+    "args": ["path/to/server.py"],
+    "env": {
+      "WORKSPACE_ROOT": "${workspaceFolder}"
+    },
+    "enabled": true
+  }
+}
+```
+
+## 🎉 Status: ACTIVE
+
+Your server is running and ready to use!

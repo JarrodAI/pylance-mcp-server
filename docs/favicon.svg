@@ -1,0 +1,17 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="32" height="32" rx="6" fill="#0a0a0f"/>
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Python snake icon with gradient -->
+  <path d="M16 6C13.5 6 12 7.5 12 9.5V12H16V12.5H10C8.5 12.5 7 13.5 7 16C7 18.5 8.5 19.5 10 19.5H12V17C12 15.5 13.5 14 16 14H20C21.5 14 23 12.5 23 11V9.5C23 7.5 21.5 6 19 6H16Z" fill="url(#grad1)"/>
+  <path d="M16 26C18.5 26 20 24.5 20 22.5V20H16V19.5H22C23.5 19.5 25 18.5 25 16C25 13.5 23.5 12.5 22 12.5H20V15C20 16.5 18.5 18 16 18H12C10.5 18 9 19.5 9 21V22.5C9 24.5 10.5 26 13 26H16Z" fill="#4f46e5"/>
+  
+  <!-- Eyes -->
+  <circle cx="14" cy="9" r="0.8" fill="#0a0a0f"/>
+  <circle cx="18" cy="23" r="0.8" fill="#0a0a0f"/>
+</svg>

@@ -1,0 +1,198 @@
+---
+title: 'Quickstart'
+description: 'Get started with Pylance MCP Pro in under 5 minutes'
+---
+
+## Prerequisites
+
+<CardGroup cols={2}>
+  <Card title="Python 3.11+" icon="python">
+    Check version: `python --version`
+  </Card>
+  <Card title="Node.js 18+" icon="node">
+    Check version: `node --version`
+  </Card>
+</CardGroup>
+
+## Installation
+
+<Steps>
+  <Step title="Clone the Repository">
+    ```bash
+    git clone https://github.com/JarrodAI/pylance-mcp.git
+    cd pylance-mcp
+    ```
+  </Step>
+  
+  <Step title="Install Dependencies">
+    ```bash
+    # Python dependencies
+    pip install -r requirements.txt
+    
+    # Node.js dependencies (Pyright)
+    npm install
+    ```
+  </Step>
+  
+  <Step title="Test the Installation">
+    ```bash
+    # Run all tests
+    pytest tests/ -v
+    
+    # Run the demo
+    python demo.py
+    ```
+    
+    You should see output showing successful Pylance integration.
+  </Step>
+</Steps>
+
+## Configure Your AI Client
+
+<Tabs>
+  <Tab title="Cursor">
+    Add to `.cursor/config.json`:
+    
+    ```json
+    {
+      "mcpServers": {
+        "pylance-mcp-pro": {
+          "command": "python",
+          "args": ["/absolute/path/to/server.py"],
+          "env": {
+            "WORKSPACE_ROOT": "/path/to/your/python/project"
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Claude Desktop">
+    Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+    
+    ```json
+    {
+      "mcpServers": {
+        "pylance-mcp-pro": {
+          "command": "python",
+          "args": ["C:\\path\\to\\server.py"],
+          "env": {
+            "WORKSPACE_ROOT": "C:\\path\\to\\your\\python\\project"
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Continue.dev">
+    Add to `.continue/config.json`:
+    
+    ```json
+    {
+      "mcpServers": {
+        "pylance-mcp-pro": {
+          "command": "python",
+          "args": ["./server.py"],
+          "env": {
+            "WORKSPACE_ROOT": "${workspaceFolder}"
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Windsurf">
+    Add to Windsurf MCP settings:
+    
+    ```json
+    {
+      "pylance-mcp-pro": {
+        "command": "python",
+        "args": ["server.py"],
+        "env": {
+          "WORKSPACE_ROOT": "/path/to/project"
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Verify Connection
+
+<Steps>
+  <Step title="Restart Your AI Client">
+    Close and reopen your AI assistant to load the new MCP configuration.
+  </Step>
+  
+  <Step title="Test a Simple Prompt">
+    Try asking your AI:
+    
+    > "Use Pylance MCP to show me type information for the main function in src/app.py"
+    
+    Your AI should use the `get_hover` tool to retrieve type signatures.
+  </Step>
+  
+  <Step title="Verify Health Check">
+    Ask your AI:
+    
+    > "Run a health check on the Pylance MCP server"
+    
+    You should see server status, version, and workspace information.
+  </Step>
+</Steps>
+
+## Example Prompts to Try
+
+<CardGroup cols={2}>
+  <Card title="Get Completions" icon="code">
+    "Show me code completions available at line 42 in models.py"
+  </Card>
+  
+  <Card title="Refactor Code" icon="rotate">
+    "Rename the User class to UserAccount across the entire workspace"
+  </Card>
+  
+  <Card title="Find References" icon="search">
+    "Find all references to the calculate_total function"
+  </Card>
+  
+  <Card title="Type Checking" icon="check">
+    "Show me all type errors in the src/ directory"
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card
+    title="Architecture"
+    icon="diagram-project"
+    href="/concepts/architecture"
+  >
+    Understand how Pylance MCP works
+  </Card>
+  
+  <Card
+    title="API Reference"
+    icon="book"
+    href="/api-reference/tools/get-completions"
+  >
+    Explore all available tools
+  </Card>
+  
+  <Card
+    title="Deployment"
+    icon="rocket"
+    href="/deployment/flyio"
+  >
+    Deploy to production
+  </Card>
+</CardGroup>
+
+<Note>
+  **Pro Tip**: Start with the free plan to explore features. Upgrade to Professional when you need higher request limits and priority support.
+</Note>
