@@ -1,0 +1,109 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Animated gradient for light mode -->
+    <linearGradient id="animatedGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1">
+        <animate attributeName="stop-color" 
+                 values="#6366f1;#8b5cf6;#ec4899;#f59e0b;#10b981;#6366f1" 
+                 dur="6s" 
+                 repeatCount="indefinite"/>
+      </stop>
+      <stop offset="50%" style="stop-color:#8b5cf6;stop-opacity:1">
+        <animate attributeName="stop-color" 
+                 values="#8b5cf6;#ec4899;#f59e0b;#10b981;#6366f1;#8b5cf6" 
+                 dur="6s" 
+                 repeatCount="indefinite"/>
+      </stop>
+      <stop offset="100%" style="stop-color:#ec4899;stop-opacity:1">
+        <animate attributeName="stop-color" 
+                 values="#ec4899;#f59e0b;#10b981;#6366f1;#8b5cf6;#ec4899" 
+                 dur="6s" 
+                 repeatCount="indefinite"/>
+      </stop>
+    </linearGradient>
+    
+    <!-- Secondary animated gradient -->
+    <linearGradient id="animatedGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4f46e5;stop-opacity:1">
+        <animate attributeName="stop-color" 
+                 values="#4f46e5;#7c3aed;#db2777;#dc2626;#059669;#4f46e5" 
+                 dur="6s" 
+                 repeatCount="indefinite"/>
+      </stop>
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1">
+        <animate attributeName="stop-color" 
+                 values="#7c3aed;#db2777;#dc2626;#059669;#4f46e5;#7c3aed" 
+                 dur="6s" 
+                 repeatCount="indefinite"/>
+      </stop>
+    </linearGradient>
+    
+    <!-- Rotating gradient animation -->
+    <animateTransform
+      attributeName="gradientTransform"
+      attributeType="XML"
+      type="rotate"
+      from="0 60 60"
+      to="360 60 60"
+      dur="12s"
+      repeatCount="indefinite"/>
+  </defs>
+  
+  <!-- Background circle with glow -->
+  <circle cx="60" cy="60" r="58" fill="#ffffff" opacity="0.1"/>
+  <circle cx="60" cy="60" r="55" fill="url(#animatedGrad1)" opacity="0.2">
+    <animate attributeName="r" 
+             values="55;58;55" 
+             dur="3s" 
+             repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Python snake icon scaled up (3.75x from 32x32 to 120x120) -->
+  <g transform="translate(15, 15) scale(3.75)">
+    <!-- Top part of python with animated gradient -->
+    <path d="M16 6C13.5 6 12 7.5 12 9.5V12H16V12.5H10C8.5 12.5 7 13.5 7 16C7 18.5 8.5 19.5 10 19.5H12V17C12 15.5 13.5 14 16 14H20C21.5 14 23 12.5 23 11V9.5C23 7.5 21.5 6 19 6H16Z" 
+          fill="url(#animatedGrad1)" 
+          filter="drop-shadow(0 2px 8px rgba(99, 102, 241, 0.4))">
+      <animate attributeName="opacity" 
+               values="1;0.8;1" 
+               dur="2s" 
+               repeatCount="indefinite"/>
+    </path>
+    
+    <!-- Bottom part of python with secondary gradient -->
+    <path d="M16 26C18.5 26 20 24.5 20 22.5V20H16V19.5H22C23.5 19.5 25 18.5 25 16C25 13.5 23.5 12.5 22 12.5H20V15C20 16.5 18.5 18 16 18H12C10.5 18 9 19.5 9 21V22.5C9 24.5 10.5 26 13 26H16Z" 
+          fill="url(#animatedGrad2)"
+          filter="drop-shadow(0 2px 8px rgba(79, 70, 229, 0.4))">
+      <animate attributeName="opacity" 
+               values="0.8;1;0.8" 
+               dur="2s" 
+               repeatCount="indefinite"/>
+    </path>
+    
+    <!-- Eyes with pulse animation -->
+    <circle cx="14" cy="9" r="0.8" fill="#1e293b">
+      <animate attributeName="r" 
+               values="0.8;1.0;0.8" 
+               dur="1.5s" 
+               repeatCount="indefinite"/>
+    </circle>
+    <circle cx="18" cy="23" r="0.8" fill="#1e293b">
+      <animate attributeName="r" 
+               values="0.8;1.0;0.8" 
+               dur="1.5s" 
+               repeatCount="indefinite"/>
+    </circle>
+  </g>
+  
+  <!-- Outer glow ring -->
+  <circle cx="60" cy="60" r="56" fill="none" stroke="url(#animatedGrad1)" stroke-width="2" opacity="0.5">
+    <animate attributeName="r" 
+             values="56;59;56" 
+             dur="3s" 
+             repeatCount="indefinite"/>
+    <animate attributeName="opacity" 
+             values="0.5;0.8;0.5" 
+             dur="3s" 
+             repeatCount="indefinite"/>
+  </circle>
+</svg>
