@@ -1,0 +1,98 @@
+{
+  "name": "Pylance MCP",
+  "logo": {
+    "dark": "/logo/logo-dark.svg",
+    "light": "/logo/logo-light.svg"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#6366f1",
+    "light": "#8b5cf6",
+    "dark": "#4f46e5",
+    "background": {
+      "dark": "#0a0a0f"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "Website",
+      "url": "https://pylancemcp.dev"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Get Started",
+    "url": "https://pylancemcp.dev/#pricing"
+  },
+  "tabs": [],
+  "anchors": [
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/yourusername/pylance-mcp-server"
+    },
+    {
+      "name": "Discord",
+      "icon": "discord",
+      "url": "https://discord.gg/pylancemcp"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Get Started",
+      "pages": [
+        "introduction",
+        "quickstart",
+        "installation"
+      ]
+    },
+    {
+      "group": "Core Concepts",
+      "pages": [
+        "concepts/architecture",
+        "concepts/mcp-protocol",
+        "concepts/security"
+      ]
+    },
+    {
+      "group": "Guides",
+      "pages": [
+        "guides/cursor-setup",
+        "guides/claude-desktop-setup",
+        "guides/continue-dev-setup",
+        "guides/windsurf-setup",
+        "guides/custom-workspace"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api-reference/tools/get-completions",
+        "api-reference/tools/get-hover",
+        "api-reference/tools/get-definition",
+        "api-reference/tools/get-references",
+        "api-reference/tools/rename-symbol",
+        "api-reference/tools/get-diagnostics",
+        "api-reference/tools/format-document",
+        "api-reference/tools/apply-workspace-edit",
+        "api-reference/tools/health-check",
+        "api-reference/resources/list-files",
+        "api-reference/resources/read-file",
+        "api-reference/resources/workspace-structure"
+      ]
+    },
+    {
+      "group": "Deployment",
+      "pages": [
+        "deployment/local",
+        "deployment/flyio",
+        "deployment/railway",
+        "deployment/docker"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/yourusername/pylance-mcp-server",
+    "twitter": "https://twitter.com/pylancemcp",
+    "discord": "https://discord.gg/pylancemcp"
+  }
+}
