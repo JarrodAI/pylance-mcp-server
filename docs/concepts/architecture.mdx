@@ -1,0 +1,90 @@
+---
+title: 'Architecture Overview'
+description: 'Understanding the Pylance MCP architecture and how it works'
+---
+
+## How It Works
+
+Pylance MCP connects your AI assistant directly to Pylance's powerful Python intelligence, giving you instant access to professional-grade code analysis.
+
+### What You Get
+
+<CardGroup cols={2}>
+  <Card title="Smart Completions" icon="wand-magic-sparkles">
+    AI-powered code suggestions with full type information
+  </Card>
+  <Card title="Instant Documentation" icon="book">
+    Hover over any symbol to see docs and type hints
+  </Card>
+  <Card title="Quick Navigation" icon="compass">
+    Jump to definitions and find all references instantly
+  </Card>
+  <Card title="Error Detection" icon="triangle-exclamation">
+    Real-time diagnostics and error explanations
+  </Card>
+</CardGroup>
+
+## How Requests Work
+
+```mermaid
+graph LR
+    A[You Type Code] --> B[AI Assistant]
+    B --> C[Pylance MCP]
+    C --> D[Code Analysis]
+    D --> E[Smart Suggestions]
+    E --> B
+    B --> A
+```
+
+## What Happens Behind the Scenes
+
+1. **You Work**: Type code naturally in your IDE
+2. **AI Asks**: Your assistant requests code intelligence
+3. **LSP Translation**: Request converted to LSP format
+4. **Pylance Processing**: Pyright analyzes Python code
+5. **Response Translation**: LSP response converted to MCP format
+6. **Client Response**: Formatted result sent back to assistant
+
+## Why Choose Pylance MCP
+
+<CardGroup cols={2}>
+  <Card title="Instant Responses" icon="bolt">
+    Most code suggestions appear in under 50ms
+  </Card>
+  <Card title="Works Anywhere" icon="globe">
+    Compatible with Cursor, Claude Desktop, Continue.dev, and more
+  </Card>
+  <Card title="Always Secure" icon="shield">
+    Your code stays private with automatic sandboxing
+  </Card>
+  <Card title="Smart Caching" icon="memory">
+    Frequently used completions load instantly
+  </Card>
+</CardGroup>
+
+## Performance You Can Trust
+
+<AccordionGroup>
+  <Accordion title="Lightning Fast Responses">
+    Average response time under 100ms for completions
+  </Accordion>
+  
+  <Accordion title="Always Available">
+    99.9% uptime with automatic failover
+  </Accordion>
+  
+  <Accordion title="Scales With You">
+    From personal projects to enterprise teams
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="MCP Protocol" icon="network-wired" href="/concepts/mcp-protocol">
+    Learn about the Model Context Protocol
+  </Card>
+  <Card title="Security" icon="lock" href="/concepts/security">
+    Understand security best practices
+  </Card>
+</CardGroup>

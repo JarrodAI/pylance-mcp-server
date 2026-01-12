@@ -1,0 +1,499 @@
+---
+title: 'Workspace Structure'
+description: 'Get a hierarchical view of your Python project structure'
+api: 'GET /resources/structure'
+---
+
+## Overview
+
+The `workspace-structure` resource returns a tree-like representation of your Python project, including directories, files, and module relationships.
+
+## Resource URI
+
+```
+pylance://workspace/structure
+```
+
+## Request
+
+<ParamField path="uri" type="string" required>
+  Resource URI: `pylance://workspace/structure`
+</ParamField>
+
+<ParamField query="maxDepth" type="number" default="10">
+  Maximum directory depth to traverse (1-20)
+</ParamField>
+
+<ParamField query="includeHidden" type="boolean" default="false">
+  Include hidden files and directories (starting with `.`)
+</ParamField>
+
+<ParamField query="excludePatterns" type="array">
+  Glob patterns to exclude (e.g., `["**/__pycache__/**", "**/.venv/**"]`)
+</ParamField>
+
+<ParamField query="includeMetadata" type="boolean" default="true">
+  Include file counts, sizes, and module information
+</ParamField>
+
+## Response
+
+<ResponseField name="root" type="object">
+  Root directory node
+
+  <Expandable title="Directory Node">
+    <ResponseField name="name" type="string">
+      Directory or file name
+    </ResponseField>
+
+    <ResponseField name="path" type="string">
+      Relative path from workspace root
+    </ResponseField>
+
+    <ResponseField name="type" type="string">
+      Node type: `directory` or `file`
+    </ResponseField>
+
+    <ResponseField name="children" type="array">
+      Child nodes (for directories)
+    </ResponseField>
+
+    <ResponseField name="fileCount" type="number">
+      Number of Python files (directories only)
+    </ResponseField>
+
+    <ResponseField name="totalSize" type="number">
+      Total size in bytes (directories only)
+    </ResponseField>
+
+    <ResponseField name="isPackage" type="boolean">
+      Whether directory is a Python package (has `__init__.py`)
+    </ResponseField>
+
+    <ResponseField name="language" type="string">
+      Language identifier (files only)
+    </ResponseField>
+
+    <ResponseField name="size" type="number">
+      File size in bytes (files only)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="metadata" type="object">
+  Workspace-level metadata
+
+  <Expandable title="Metadata">
+    <ResponseField name="totalFiles" type="number">
+      Total Python files in workspace
+    </ResponseField>
+
+    <ResponseField name="totalDirectories" type="number">
+      Total directories
+    </ResponseField>
+
+    <ResponseField name="packages" type="array">
+      List of Python packages found
+    </ResponseField>
+
+    <ResponseField name="depth" type="number">
+      Maximum depth traversed
+    </ResponseField>
+
+    <ResponseField name="totalSize" type="number">
+      Total size of all files in bytes
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example Request
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://pylancemcp.com/v1/resources/read \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "uri": "pylance://workspace/structure",
+    "params": {
+      "maxDepth": 5,
+      "includeHidden": false,
+      "excludePatterns": ["**/__pycache__/**", "**/.venv/**"]
+    }
+  }'
+```
+
+```python Python
+from pylance_mcp import MCPClient
+
+client = MCPClient(api_key="YOUR_API_KEY")
+
+structure = client.read_resource(
+    uri="pylance://workspace/structure",
+    maxDepth=5,
+    includeHidden=False,
+    excludePatterns=["**/__pycache__/**", "**/.venv/**"]
+)
+
+def print_tree(node, indent=0):
+    icon = "📁" if node["type"] == "directory" else "📄"
+    print("  " * indent + f"{icon} {node['name']}")
+    for child in node.get("children", []):
+        print_tree(child, indent + 1)
+
+print_tree(structure["root"])
+```
+
+```javascript JavaScript
+const { MCPClient } = require('@pylancemcp/client');
+
+const client = new MCPClient({ apiKey: 'YOUR_API_KEY' });
+
+const structure = await client.readResource({
+  uri: 'pylance://workspace/structure',
+  params: {
+    maxDepth: 5,
+    includeHidden: false,
+    excludePatterns: ['**/__pycache__/**', '**/.venv/**']
+  }
+});
+
+function printTree(node, indent = 0) {
+  const icon = node.type === 'directory' ? '📁' : '📄';
+  console.log('  '.repeat(indent) + `${icon} ${node.name}`);
+  (node.children || []).forEach(child => printTree(child, indent + 1));
+}
+
+printTree(structure.root);
+```
+
+```typescript TypeScript
+import { MCPClient, WorkspaceStructure } from '@pylancemcp/client';
+
+const client = new MCPClient({ apiKey: 'YOUR_API_KEY' });
+
+const structure: WorkspaceStructure = await client.readResource({
+  uri: 'pylance://workspace/structure',
+  params: {
+    maxDepth: 5,
+    includeHidden: false,
+    excludePatterns: ['**/__pycache__/**', '**/.venv/**']
+  }
+});
+
+console.log(`Total files: ${structure.metadata.totalFiles}`);
+console.log(`Packages: ${structure.metadata.packages.join(', ')}`);
+```
+</CodeGroup>
+
+## Example Response
+
+```json
+{
+  "root": {
+    "name": "workspace",
+    "path": "/",
+    "type": "directory",
+    "fileCount": 15,
+    "totalSize": 45678,
+    "isPackage": false,
+    "children": [
+      {
+        "name": "src",
+        "path": "/src",
+        "type": "directory",
+        "fileCount": 10,
+        "totalSize": 35000,
+        "isPackage": true,
+        "children": [
+          {
+            "name": "__init__.py",
+            "path": "/src/__init__.py",
+            "type": "file",
+            "language": "python",
+            "size": 256
+          },
+          {
+            "name": "main.py",
+            "path": "/src/main.py",
+            "type": "file",
+            "language": "python",
+            "size": 2048
+          },
+          {
+            "name": "models",
+            "path": "/src/models",
+            "type": "directory",
+            "fileCount": 4,
+            "totalSize": 15000,
+            "isPackage": true,
+            "children": [
+              {
+                "name": "__init__.py",
+                "path": "/src/models/__init__.py",
+                "type": "file",
+                "language": "python",
+                "size": 128
+              },
+              {
+                "name": "user.py",
+                "path": "/src/models/user.py",
+                "type": "file",
+                "language": "python",
+                "size": 4096
+              },
+              {
+                "name": "product.py",
+                "path": "/src/models/product.py",
+                "type": "file",
+                "language": "python",
+                "size": 3584
+              }
+            ]
+          },
+          {
+            "name": "utils",
+            "path": "/src/utils",
+            "type": "directory",
+            "fileCount": 3,
+            "totalSize": 8000,
+            "isPackage": true,
+            "children": [
+              {
+                "name": "__init__.py",
+                "path": "/src/utils/__init__.py",
+                "type": "file",
+                "language": "python",
+                "size": 64
+              },
+              {
+                "name": "helpers.py",
+                "path": "/src/utils/helpers.py",
+                "type": "file",
+                "language": "python",
+                "size": 2048
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "tests",
+        "path": "/tests",
+        "type": "directory",
+        "fileCount": 5,
+        "totalSize": 10678,
+        "isPackage": true,
+        "children": [
+          {
+            "name": "__init__.py",
+            "path": "/tests/__init__.py",
+            "type": "file",
+            "language": "python",
+            "size": 0
+          },
+          {
+            "name": "test_user.py",
+            "path": "/tests/test_user.py",
+            "type": "file",
+            "language": "python",
+            "size": 3456
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "totalFiles": 15,
+    "totalDirectories": 6,
+    "packages": ["src", "src.models", "src.utils", "tests"],
+    "depth": 3,
+    "totalSize": 45678
+  }
+}
+```
+
+## Common Use Cases
+
+### Visualize Project Structure
+
+```python
+def visualize_structure(node, indent=0, is_last=True):
+    prefix = "└── " if is_last else "├── "
+    connector = "    " if is_last else "│   "
+    
+    if indent > 0:
+        print(connector * (indent - 1) + prefix + node["name"])
+    else:
+        print(node["name"])
+    
+    children = node.get("children", [])
+    for i, child in enumerate(children):
+        is_last_child = i == len(children) - 1
+        visualize_structure(child, indent + 1, is_last_child)
+
+structure = client.read_resource(uri="pylance://workspace/structure")
+visualize_structure(structure["root"])
+```
+
+**Output:**
+```
+workspace
+├── src
+│   ├── __init__.py
+│   ├── main.py
+│   ├── models
+│   │   ├── __init__.py
+│   │   ├── user.py
+│   │   └── product.py
+│   └── utils
+│       ├── __init__.py
+│       └── helpers.py
+└── tests
+    ├── __init__.py
+    └── test_user.py
+```
+
+### Find All Packages
+
+```python
+structure = client.read_resource(
+    uri="pylance://workspace/structure",
+    includeMetadata=True
+)
+
+packages = structure["metadata"]["packages"]
+print(f"Found {len(packages)} packages:")
+for pkg in packages:
+    print(f"  - {pkg}")
+```
+
+### Calculate Project Size
+
+```python
+structure = client.read_resource(uri="pylance://workspace/structure")
+
+def format_size(bytes):
+    for unit in ['B', 'KB', 'MB', 'GB']:
+        if bytes < 1024:
+            return f"{bytes:.2f} {unit}"
+        bytes /= 1024
+    return f"{bytes:.2f} TB"
+
+total_size = structure["metadata"]["totalSize"]
+print(f"Project size: {format_size(total_size)}")
+```
+
+### Find Large Directories
+
+```python
+def find_large_dirs(node, threshold=10000, results=None):
+    if results is None:
+        results = []
+    
+    if node["type"] == "directory":
+        if node["totalSize"] > threshold:
+            results.append({
+                "path": node["path"],
+                "size": node["totalSize"],
+                "fileCount": node["fileCount"]
+            })
+    
+    for child in node.get("children", []):
+        find_large_dirs(child, threshold, results)
+    
+    return results
+
+structure = client.read_resource(uri="pylance://workspace/structure")
+large_dirs = find_large_dirs(structure["root"], threshold=50000)
+
+for dir in sorted(large_dirs, key=lambda x: x["size"], reverse=True):
+    print(f"{dir['path']}: {dir['size']} bytes ({dir['fileCount']} files)")
+```
+
+## Performance Considerations
+
+<Warning>
+  Large workspaces (>1,000 files) may take several seconds to scan. Use `maxDepth` to limit traversal.
+</Warning>
+
+### Optimization Tips
+
+<Check>Set `maxDepth` to minimum required depth</Check>
+<Check>Use `excludePatterns` to skip unnecessary directories</Check>
+<Check>Set `includeMetadata=false` if counts aren't needed</Check>
+<Check>Cache structure and invalidate on workspace changes</Check>
+
+**Example: Shallow Scan**
+```python
+# Fast scan of top 2 levels only
+structure = client.read_resource(
+    uri="pylance://workspace/structure",
+    maxDepth=2,
+    includeMetadata=False
+)
+```
+
+## Error Responses
+
+<ResponseExample>
+```json Workspace Not Found
+{
+  "error": {
+    "code": "WORKSPACE_NOT_FOUND",
+    "message": "Workspace directory does not exist",
+    "details": {
+      "workspaceRoot": "/invalid/path"
+    }
+  }
+}
+```
+
+```json Invalid Depth
+{
+  "error": {
+    "code": "INVALID_PARAMETER",
+    "message": "maxDepth must be between 1 and 20",
+    "details": {
+      "parameter": "maxDepth",
+      "value": 50,
+      "min": 1,
+      "max": 20
+    }
+  }
+}
+```
+
+```json Scan Timeout
+{
+  "error": {
+    "code": "SCAN_TIMEOUT",
+    "message": "Workspace scan exceeded time limit",
+    "details": {
+      "timeout": 30000,
+      "suggestion": "Reduce maxDepth or add more excludePatterns"
+    }
+  }
+}
+```
+</ResponseExample>
+
+## Rate Limits
+
+| Tier | Requests/Day | Max Depth |
+|------|--------------|-----------|
+| Free | 50 | 5 |
+| Hobby | 1,000 | 10 |
+| Pro | 10,000 | 20 |
+| Enterprise | Unlimited | Unlimited |
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card title="List Files" icon="list" href="/api-reference/resources/list-files">
+    Get flat list of all files
+  </Card>
+  <Card title="Read File" icon="file" href="/api-reference/resources/read-file">
+    Read individual file contents
+  </Card>
+</CardGroup>

@@ -1,0 +1,410 @@
+---
+title: 'Health Check'
+description: 'Check server status and workspace health'
+api: 'GET /tools/health_check'
+---
+
+## Overview
+
+Check the health status of the Pylance MCP server and your workspace. Use this to verify connectivity, monitor performance, and troubleshoot issues.
+
+## Request
+
+<ParamField path="includeWorkspace" type="boolean" default="true">
+  Include workspace-specific health information
+</ParamField>
+
+<ParamField path="includeMetrics" type="boolean" default="false">
+  Include performance metrics
+</ParamField>
+
+## Response
+
+<ResponseField name="status" type="string">
+  Overall health status: `healthy`, `degraded`, `unhealthy`
+</ResponseField>
+
+<ResponseField name="server" type="object">
+  Server health information
+  
+  <Expandable title="Server Health">
+    <ResponseField name="version" type="string">
+      Pylance MCP server version
+    </ResponseField>
+    
+    <ResponseField name="uptime" type="number">
+      Server uptime in seconds
+    </ResponseField>
+    
+    <ResponseField name="pylanceVersion" type="string">
+      Pylance language server version
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="workspace" type="object">
+  Workspace health information (if `includeWorkspace: true`)
+  
+  <Expandable title="Workspace Health">
+    <ResponseField name="loaded" type="boolean">
+      Whether workspace is fully loaded
+    </ResponseField>
+    
+    <ResponseField name="fileCount" type="number">
+      Number of Python files indexed
+    </ResponseField>
+    
+    <ResponseField name="pythonVersion" type="string">
+      Python interpreter version
+    </ResponseField>
+    
+    <ResponseField name="indexingProgress" type="number">
+      Indexing progress percentage (0-100)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="metrics" type="object">
+  Performance metrics (if `includeMetrics: true`)
+  
+  <Expandable title="Metrics">
+    <ResponseField name="requestsPerMinute" type="number">
+      Average requests per minute
+    </ResponseField>
+    
+    <ResponseField name="avgResponseTime" type="number">
+      Average response time in milliseconds
+    </ResponseField>
+    
+    <ResponseField name="errorRate" type="number">
+      Error rate percentage
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example Request
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://pylancemcp.com/v1/tools/call \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "health_check",
+    "arguments": {
+      "includeWorkspace": true,
+      "includeMetrics": true
+    }
+  }'
+```
+
+```python Python
+from pylance_mcp import Client
+
+client = Client(api_key="YOUR_API_KEY")
+
+health = client.health_check(
+    include_workspace=True,
+    include_metrics=True
+)
+
+print(f"Status: {health.status}")
+print(f"Server uptime: {health.server.uptime}s")
+
+if health.workspace:
+    if health.workspace.loaded:
+        print(f"✅ Workspace loaded ({health.workspace.file_count} files)")
+    else:
+        print(f"⏳ Indexing: {health.workspace.indexing_progress}%")
+```
+
+```javascript JavaScript
+import { PylanceMCP } from '@pylance-mcp/client';
+
+const client = new PylanceMCP({ apiKey: 'YOUR_API_KEY' });
+
+const health = await client.healthCheck({
+  includeWorkspace: true,
+  includeMetrics: true
+});
+
+console.log(`Status: ${health.status}`);
+console.log(`Server uptime: ${health.server.uptime}s`);
+
+if (health.workspace) {
+  if (health.workspace.loaded) {
+    console.log(`✅ Workspace loaded (${health.workspace.fileCount} files)`);
+  } else {
+    console.log(`⏳ Indexing: ${health.workspace.indexingProgress}%`);
+  }
+}
+```
+
+```typescript TypeScript
+import { PylanceMCP, HealthCheckRequest } from '@pylance-mcp/client';
+
+const client = new PylanceMCP({ apiKey: process.env.PYLANCE_API_KEY! });
+
+const request: HealthCheckRequest = {
+  includeWorkspace: true,
+  includeMetrics: true
+};
+
+const health = await client.healthCheck(request);
+
+console.log(`Status: ${health.status}`);
+console.log(`Server uptime: ${health.server.uptime}s`);
+
+if (health.workspace?.loaded) {
+  console.log(`✅ Workspace loaded (${health.workspace.fileCount} files)`);
+} else if (health.workspace) {
+  console.log(`⏳ Indexing: ${health.workspace.indexingProgress}%`);
+}
+```
+</CodeGroup>
+
+## Example Response
+
+```json
+{
+  "status": "healthy",
+  "server": {
+    "version": "1.2.3",
+    "uptime": 3600,
+    "pylanceVersion": "2024.1.1"
+  },
+  "workspace": {
+    "loaded": true,
+    "fileCount": 247,
+    "pythonVersion": "3.11.5",
+    "indexingProgress": 100
+  },
+  "metrics": {
+    "requestsPerMinute": 45,
+    "avgResponseTime": 87,
+    "errorRate": 0.5
+  }
+}
+```
+
+## Health Status
+
+| Status | Meaning | Action |
+|--------|---------|--------|
+| `healthy` | All systems operational | None needed |
+| `degraded` | Partial functionality | Check specific issues |
+| `unhealthy` | Server not responding correctly | Restart or contact support |
+
+## Use Cases
+
+### Startup Verification
+
+```python
+# Check if server is ready before making requests
+def wait_for_server_ready(client, timeout=30):
+    import time
+    start = time.time()
+    
+    while time.time() - start < timeout:
+        try:
+            health = client.health_check()
+            
+            if health.status == "healthy":
+                print("✅ Server is ready")
+                return True
+            elif health.status == "degraded":
+                print("⚠️  Server is degraded but functional")
+                return True
+            else:
+                print("⏳ Server not ready, waiting...")
+        except Exception as e:
+            print(f"❌ Connection error: {e}")
+        
+        time.sleep(2)
+    
+    print("❌ Timeout waiting for server")
+    return False
+
+# Use it
+client = Client(api_key="YOUR_API_KEY")
+if wait_for_server_ready(client):
+    # Proceed with requests
+    completions = client.get_completions(...)
+```
+
+### Monitor Workspace Loading
+
+```python
+# Wait for workspace to finish indexing
+def wait_for_workspace_loaded(client):
+    import time
+    
+    while True:
+        health = client.health_check(include_workspace=True)
+        
+        if health.workspace.loaded:
+            print(f"✅ Workspace ready: {health.workspace.file_count} files")
+            break
+        else:
+            progress = health.workspace.indexing_progress
+            print(f"⏳ Indexing workspace: {progress}%")
+            time.sleep(1)
+
+wait_for_workspace_loaded(client)
+```
+
+### Performance Monitoring
+
+```python
+# Monitor server performance over time
+def monitor_performance(client, duration_minutes=60):
+    import time
+    
+    start_time = time.time()
+    samples = []
+    
+    while time.time() - start_time < duration_minutes * 60:
+        health = client.health_check(include_metrics=True)
+        
+        samples.append({
+            "timestamp": time.time(),
+            "response_time": health.metrics.avg_response_time,
+            "error_rate": health.metrics.error_rate,
+            "requests_per_min": health.metrics.requests_per_minute
+        })
+        
+        # Alert if performance degrades
+        if health.metrics.avg_response_time > 200:
+            print(f"⚠️  Slow responses: {health.metrics.avg_response_time}ms")
+        
+        if health.metrics.error_rate > 5.0:
+            print(f"⚠️  High error rate: {health.metrics.error_rate}%")
+        
+        time.sleep(60)  # Check every minute
+    
+    return samples
+```
+
+### Troubleshooting Helper
+
+```python
+# Diagnose common issues
+def diagnose_issues(client):
+    print("🔍 Running diagnostics...\n")
+    
+    try:
+        health = client.health_check(
+            include_workspace=True,
+            include_metrics=True
+        )
+    except Exception as e:
+        print(f"❌ Cannot connect to server: {e}")
+        return
+    
+    # Check server status
+    if health.status != "healthy":
+        print(f"❌ Server status: {health.status}")
+    else:
+        print(f"✅ Server is healthy")
+    
+    print(f"   Version: {health.server.version}")
+    print(f"   Uptime: {health.server.uptime}s")
+    
+    # Check workspace
+    if not health.workspace.loaded:
+        print(f"\n⏳ Workspace still indexing: {health.workspace.indexing_progress}%")
+        print("   Wait for indexing to complete")
+    else:
+        print(f"\n✅ Workspace loaded")
+        print(f"   Files: {health.workspace.file_count}")
+        print(f"   Python: {health.workspace.python_version}")
+    
+    # Check performance
+    if health.metrics.avg_response_time > 150:
+        print(f"\n⚠️  Slow response times: {health.metrics.avg_response_time}ms")
+        print("   Consider reducing request frequency")
+    
+    if health.metrics.error_rate > 2.0:
+        print(f"\n⚠️  Elevated error rate: {health.metrics.error_rate}%")
+        print("   Check logs for specific errors")
+
+diagnose_issues(client)
+```
+
+## Interpreting Metrics
+
+### Response Time
+
+| Range | Status | Action |
+|-------|--------|--------|
+| 0-100ms | Excellent | None |
+| 100-200ms | Good | None |
+| 200-500ms | Acceptable | Monitor |
+| >500ms | Slow | Investigate |
+
+### Error Rate
+
+| Range | Status | Action |
+|-------|--------|--------|
+| 0-1% | Normal | None |
+| 1-5% | Elevated | Review errors |
+| 5-10% | High | Check logs |
+| >10% | Critical | Contact support |
+
+### Requests Per Minute
+
+Monitor to avoid rate limits:
+
+```python
+health = client.health_check(include_metrics=True)
+rpm = health.metrics.requests_per_minute
+
+# Free tier: 20/hour = 0.33/minute
+# Hobby tier: 500/hour = 8.33/minute
+# Pro tier: 5000/hour = 83.33/minute
+
+if rpm > (YOUR_TIER_HOURLY_LIMIT / 60) * 0.8:
+    print("⚠️  Approaching rate limit")
+```
+
+## Performance Tips
+
+<Tip>
+  **Lightweight**: Health checks are fast (<10ms) and don't count against rate limits
+</Tip>
+
+<Tip>
+  **Cache Status**: Cache health status for 30-60 seconds to avoid excessive checks
+</Tip>
+
+<Tip>
+  **Startup Only**: Use detailed checks (metrics) only during startup/troubleshooting
+</Tip>
+
+## Error Responses
+
+| Code | Reason | Solution |
+|------|--------|----------|
+| `SERVER_UNAVAILABLE` | Server not responding | Check network connection |
+| `AUTHENTICATION_FAILED` | Invalid API key | Verify API key |
+| `MAINTENANCE_MODE` | Server under maintenance | Wait and retry |
+
+## Rate Limits
+
+<Info>
+  Health checks do **not** count toward your API rate limits. Check as often as needed.
+</Info>
+
+## Related Tools
+
+<CardGroup cols={2}>
+  <Card title="Get Diagnostics" icon="triangle-exclamation" href="/api-reference/tools/get-diagnostics">
+    Check for code errors
+  </Card>
+  <Card title="List Files" icon="list" href="/api-reference/resources/list-files">
+    See workspace file count
+  </Card>
+  <Card title="Workspace Structure" icon="sitemap" href="/api-reference/resources/workspace-structure">
+    View project structure
+  </Card>
+</CardGroup>

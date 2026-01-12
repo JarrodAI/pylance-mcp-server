@@ -1,0 +1,134 @@
+---
+title: Introduction
+description: 'Welcome to Pylance MCP Pro - Professional Python intelligence with advanced features'
+---
+
+<img
+  className="block dark:hidden"
+  src="/images/hero-light.png"
+  alt="Hero Light"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/hero-dark.png"
+  alt="Hero Dark"
+/>
+
+## What is Pylance MCP Pro?
+
+Pylance MCP Pro is a professional, production-ready Model Context Protocol (MCP) server that exposes the full power of Microsoft's Pylance/Pyright language server to AI coding assistants with advanced features like OpenTelemetry tracing and conversation logging. It enables Claude Desktop, Cursor, Continue.dev, Windsurf, and other MCP-compatible clients to autonomously analyze, refactor, type-check, and fix entire Python codebases with zero human intervention.
+
+<CardGroup cols={2}>
+  <Card
+    title="Quick Start"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Get up and running in under 5 minutes
+  </Card>
+  <Card
+    title="Installation"
+    icon="download"
+    href="/installation"
+  >
+    Detailed installation instructions for all platforms
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference/tools/get-completions"
+  >
+    Complete tool and resource documentation
+  </Card>
+  <Card
+    title="Guides"
+    icon="book"
+    href="/guides/cursor-setup"
+  >
+    Step-by-step setup guides for popular clients
+  </Card>
+</CardGroup>
+
+## Features
+
+### 🧠 IntelliSense Completions
+Full LSP completion support with type inference. Get context-aware suggestions with function signatures, parameter hints, and docstrings—exactly like VS Code.
+
+### ⚡ Instant Type Checking
+Pyright-powered static analysis catches type errors, undefined variables, and import issues before runtime. Zero-config diagnostics for the entire workspace.
+
+### 🎯 Go-to-Definition
+Jump to function, class, or variable definitions across files, packages, and virtual environments. Works with stdlib, third-party libs, and your code.
+
+### 🔍 Find All References
+Locate every usage of a symbol across your entire codebase in milliseconds. Perfect for refactoring or understanding data flow in complex projects.
+
+### 💡 Hover Type Info
+Inspect type annotations, function signatures, and docstrings on-demand. See inferred types, parameter info, and return types without leaving your flow.
+
+### 🔄 Safe Symbol Renaming
+Rename variables, functions, or classes across multiple files with guaranteed correctness. LSP ensures all references are updated atomically.
+
+### ✨ Auto-Format & Fix
+Format Python code with Black/autopep8 integration. Apply quick fixes for imports, type hints, and common issues with a single command.
+
+### 🗂️ Workspace Intelligence
+Multi-file edits, bulk refactoring, and project-wide operations. Create, modify, or delete files programmatically via LSP workspace edits.
+
+### 🐍 Venv Auto-Detection
+Automatically discovers Python interpreters, virtual environments, and package dependencies. Supports conda, venv, poetry, and system Python.
+
+### 🔬 Deep Code Analysis
+Advanced diagnostics beyond syntax: unused imports, unreachable code, type narrowing issues, and missing type stubs. Powered by Pyright's type checker.
+
+### 🌐 MCP Protocol Native
+Built on Model Context Protocol—works seamlessly with Claude Desktop, Cursor, Continue.dev, Windsurf, and any MCP-compatible client.
+
+### 📊 Training Data Export
+Optional logging of all prompts, responses, and tool calls to SQLite. Export to JSONL for fine-tuning your own models on real Python workflows.
+
+## Why Pylance MCP Pro?
+
+Traditional AI coding assistants are limited to simple text manipulation without deep understanding of Python semantics. Pylance MCP Pro bridges this gap by providing:
+
+- **Complete Type Awareness**: Full Pyright type checking and inference
+- **Zero Configuration**: Works out of the box with any Python project
+- **Production Ready**: Secure, fast, and battle-tested
+- **MCP Native**: Integrates seamlessly with any MCP client
+- **Open Source**: MIT licensed, community-driven
+
+## Supported Clients
+
+<CardGroup cols={2}>
+  <Card title="Claude Desktop" icon="comment">
+    Anthropic's desktop app with native MCP support
+  </Card>
+  <Card title="Cursor" icon="cursor">
+    AI-powered code editor
+  </Card>
+  <Card title="Continue.dev" icon="forward">
+    VS Code extension for AI pair programming
+  </Card>
+  <Card title="Windsurf" icon="wind">
+    Next-generation AI coding assistant
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Quick Start Guide"
+    icon="play"
+    href="/quickstart"
+  >
+    Install and configure in minutes
+  </Card>
+  <Card
+    title="Tool Reference"
+    icon="wrench"
+    href="/api-reference/tools/get-completions"
+  >
+    Explore all available LSP tools
+  </Card>
+</CardGroup>

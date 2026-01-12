@@ -1,0 +1,395 @@
+---
+title: 'Apply Workspace Edit'
+description: 'Apply text edits to files in your workspace'
+api: 'POST /tools/apply_workspace_edit'
+---
+
+## Overview
+
+Apply text changes to one or more files in your workspace. This is used to execute the edits returned by other tools like rename, format, or code actions.
+
+## Request
+
+<ParamField path="edit" type="object" required>
+  Workspace edit containing all changes
+  
+  <Expandable title="Workspace Edit">
+    <ParamField path="changes" type="object">
+      Map of file URIs to arrays of text edits
+      
+      <Expandable title="Text Edit">
+        <ParamField path="range" type="object">
+          Range to replace
+        </ParamField>
+        <ParamField path="newText" type="string">
+          New text to insert
+        </ParamField>
+      </Expandable>
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="label" type="string">
+  Optional description of the edit (e.g., "Rename variable")
+</ParamField>
+
+## Response
+
+<ResponseField name="applied" type="boolean">
+  Whether the edit was successfully applied
+</ResponseField>
+
+<ResponseField name="failureReason" type="string">
+  Error message if `applied` is `false`
+</ResponseField>
+
+<ResponseField name="filesModified" type="number">
+  Number of files that were changed
+</ResponseField>
+
+<ResponseField name="totalEdits" type="number">
+  Total number of text edits applied
+</ResponseField>
+
+## Example Request
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://pylancemcp.com/v1/tools/call \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "apply_workspace_edit",
+    "arguments": {
+      "edit": {
+        "changes": {
+          "file:///workspace/app/utils.py": [
+            {
+              "range": {
+                "start": {"line": 8, "character": 4},
+                "end": {"line": 8, "character": 19}
+              },
+              "newText": "compute_total"
+            }
+          ]
+        }
+      },
+      "label": "Rename function"
+    }
+  }'
+```
+
+```python Python
+from pylance_mcp import Client
+
+client = Client(api_key="YOUR_API_KEY")
+
+# Get edits from another operation (e.g., rename)
+rename_result = client.rename_symbol(...)
+
+# Apply the edits
+result = client.apply_workspace_edit(
+    edit=rename_result.changes,
+    label="Rename calculate_total to compute_total"
+)
+
+if result.applied:
+    print(f"✅ Modified {result.files_modified} files")
+    print(f"   Applied {result.total_edits} edits")
+else:
+    print(f"❌ Failed: {result.failure_reason}")
+```
+
+```javascript JavaScript
+import { PylanceMCP } from '@pylance-mcp/client';
+
+const client = new PylanceMCP({ apiKey: 'YOUR_API_KEY' });
+
+// Get edits from another operation
+const renameResult = await client.renameSymbol(...);
+
+// Apply the edits
+const result = await client.applyWorkspaceEdit({
+  edit: renameResult.changes,
+  label: 'Rename calculate_total to compute_total'
+});
+
+if (result.applied) {
+  console.log(`✅ Modified ${result.filesModified} files`);
+  console.log(`   Applied ${result.totalEdits} edits`);
+} else {
+  console.log(`❌ Failed: ${result.failureReason}`);
+}
+```
+
+```typescript TypeScript
+import { PylanceMCP, WorkspaceEditRequest } from '@pylance-mcp/client';
+
+const client = new PylanceMCP({ apiKey: process.env.PYLANCE_API_KEY! });
+
+// Get edits from another operation
+const renameResult = await client.renameSymbol(...);
+
+// Apply the edits
+const request: WorkspaceEditRequest = {
+  edit: renameResult.changes,
+  label: 'Rename calculate_total to compute_total'
+};
+
+const result = await client.applyWorkspaceEdit(request);
+
+if (result.applied) {
+  console.log(`✅ Modified ${result.filesModified} files`);
+  console.log(`   Applied ${result.totalEdits} edits`);
+} else {
+  console.log(`❌ Failed: ${result.failureReason}`);
+}
+```
+</CodeGroup>
+
+## Example Response
+
+```json
+{
+  "applied": true,
+  "filesModified": 3,
+  "totalEdits": 12
+}
+```
+
+## Use Cases
+
+### Apply Rename Edits
+
+```python
+# 1. Get rename edits
+rename = client.rename_symbol(
+    uri="file:///workspace/app/utils.py",
+    line=8,
+    character=4,
+    new_name="compute_total"
+)
+
+# 2. Apply the edits
+result = client.apply_workspace_edit(
+    edit=rename.changes,
+    label="Rename calculate_total to compute_total"
+)
+
+if result.applied:
+    print(f"✅ Renamed across {result.files_modified} files")
+```
+
+### Apply Format Changes
+
+```python
+# 1. Get format edits
+formatted = client.format_document(
+    uri="file:///workspace/app/views.py"
+)
+
+# 2. Convert to workspace edit format
+workspace_edit = {
+    "file:///workspace/app/views.py": formatted.edits
+}
+
+# 3. Apply the formatting
+result = client.apply_workspace_edit(
+    edit=workspace_edit,
+    label="Format document"
+)
+```
+
+### Apply Code Action
+
+```python
+# 1. Get code actions
+actions = client.get_code_actions(uri=file_uri, range=error_range)
+
+# 2. Find the quickfix to apply
+quickfix = next(a for a in actions.actions if a.kind == "quickfix")
+
+# 3. Apply it
+result = client.apply_workspace_edit(
+    edit=quickfix.edit,
+    label=quickfix.title
+)
+
+if result.applied:
+    print(f"✅ Applied fix: {quickfix.title}")
+```
+
+### Batch Multiple Edits
+
+```python
+# Apply edits to multiple files at once
+workspace_edit = {
+    "file:///workspace/app/utils.py": [
+        {"range": {...}, "newText": "new_name"}
+    ],
+    "file:///workspace/app/views.py": [
+        {"range": {...}, "newText": "new_name"},
+        {"range": {...}, "newText": "import new_name"}
+    ],
+    "file:///workspace/tests/test_utils.py": [
+        {"range": {...}, "newText": "new_name"}
+    ]
+}
+
+result = client.apply_workspace_edit(
+    edit=workspace_edit,
+    label="Update references"
+)
+```
+
+## Edit Application Order
+
+Edits are applied in a specific order to prevent conflicts:
+
+<Steps>
+  <Step title="Sort by File">
+    Group edits by file URI
+  </Step>
+  <Step title="Sort by Position">
+    Within each file, sort edits from bottom to top (descending line/character)
+  </Step>
+  <Step title="Apply Edits">
+    Apply each edit, preventing line number shifts
+  </Step>
+  <Step title="Verify">
+    Confirm all edits applied successfully
+  </Step>
+</Steps>
+
+<Info>
+  Bottom-to-top ordering ensures that edits don't affect the positions of subsequent edits.
+</Info>
+
+## Error Handling
+
+The operation is **atomic** - either all edits succeed or none are applied:
+
+```python
+result = client.apply_workspace_edit(edit=workspace_edit)
+
+if not result.applied:
+    if "FILE_NOT_FOUND" in result.failure_reason:
+        print("❌ One or more files don't exist")
+    elif "PERMISSION_DENIED" in result.failure_reason:
+        print("❌ Cannot write to files")
+    elif "CONFLICTING_EDITS" in result.failure_reason:
+        print("❌ Edits overlap - cannot apply safely")
+    else:
+        print(f"❌ Failed: {result.failure_reason}")
+```
+
+## Safety Features
+
+<CardGroup cols={2}>
+  <Card title="Atomic Operation" icon="shield">
+    All files updated together or none at all
+  </Card>
+  <Card title="Conflict Detection" icon="triangle-exclamation">
+    Overlapping edits are rejected
+  </Card>
+  <Card title="Validation" icon="check">
+    File paths and ranges validated before applying
+  </Card>
+  <Card title="Rollback Support" icon="rotate-left">
+    Failed edits don't leave partial changes
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+<Check>
+  **Preview First**: Show user what will change before applying
+</Check>
+
+<Check>
+  **Use Version Control**: Commit before large edits so you can revert
+</Check>
+
+<Check>
+  **Validate Ranges**: Ensure all ranges are valid before applying
+</Check>
+
+<Check>
+  **Add Labels**: Always provide descriptive labels for better UX
+</Check>
+
+## Performance Tips
+
+<Tip>
+  **Batch Edits**: Apply multiple files in one operation instead of separate calls
+</Tip>
+
+<Tip>
+  **Non-Overlapping**: Ensure edits don't overlap for faster application
+</Tip>
+
+<Tip>
+  **Minimize Scope**: Only edit necessary files and ranges
+</Tip>
+
+## Error Responses
+
+| Code | Reason | Solution |
+|------|--------|----------|
+| `FILE_NOT_FOUND` | One or more files don't exist | Verify all file URIs |
+| `PERMISSION_DENIED` | Cannot write to file | Check file permissions |
+| `INVALID_RANGE` | Range out of bounds | Validate line/character positions |
+| `CONFLICTING_EDITS` | Overlapping edits in same file | Resolve conflicts first |
+| `FILE_MODIFIED` | File changed since edits were generated | Regenerate edits |
+| `READONLY_FILE` | File is read-only | Remove read-only flag |
+
+## Rollback
+
+If you need to undo an edit:
+
+```python
+# Save original content before applying
+original_content = {}
+for file_uri in workspace_edit.keys():
+    with open(file_uri.replace('file://', ''), 'r') as f:
+        original_content[file_uri] = f.read()
+
+# Apply edit
+result = client.apply_workspace_edit(edit=workspace_edit)
+
+# If something went wrong, restore original
+if not result.applied or user_wants_undo:
+    for file_uri, content in original_content.items():
+        with open(file_uri.replace('file://', ''), 'w') as f:
+            f.write(content)
+```
+
+## Rate Limits
+
+| Tier | Requests/Hour | Requests/Day | Max Files/Edit | Max Edits/File |
+|------|---------------|--------------|----------------|----------------|
+| **Free** | 10 | 50 | 5 | 100 |
+| **Hobby** | 250 | 2,500 | 20 | 500 |
+| **Pro** | 2,500 | 25,000 | 100 | 5,000 |
+| **Enterprise** | Unlimited | Unlimited | Unlimited | Unlimited |
+
+<Warning>
+  Large workspace edits count as one request but may take longer to apply.
+</Warning>
+
+## Related Tools
+
+<CardGroup cols={2}>
+  <Card title="Rename Symbol" icon="pen" href="/api-reference/tools/rename-symbol">
+    Generate rename edits to apply
+  </Card>
+  <Card title="Format Document" icon="align-left" href="/api-reference/tools/format-document">
+    Generate format edits to apply
+  </Card>
+  <Card title="Get Code Actions" icon="bolt" href="/api-reference/tools/get-code-actions">
+    Get quick fix edits to apply
+  </Card>
+  <Card title="Get Diagnostics" icon="triangle-exclamation" href="/api-reference/tools/get-diagnostics">
+    Verify no errors after applying
+  </Card>
+</CardGroup>

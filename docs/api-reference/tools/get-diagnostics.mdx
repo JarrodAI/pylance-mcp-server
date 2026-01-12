@@ -1,0 +1,348 @@
+---
+title: 'Get Diagnostics'
+description: 'Get errors, warnings, and hints for your Python code'
+api: 'POST /tools/get_diagnostics'
+---
+
+## Overview
+
+Get real-time diagnostics (errors, warnings, and informational messages) for your Python code. This provides the same error detection you see in your IDE's Problems panel.
+
+## Request
+
+<ParamField path="uri" type="string" required>
+  File URI (e.g., `file:///workspace/main.py`)
+</ParamField>
+
+<ParamField path="severity" type="string">
+  Filter by severity: `error`, `warning`, `information`, `hint`
+</ParamField>
+
+## Response
+
+<ResponseField name="diagnostics" type="array">
+  Array of diagnostic messages
+
+  <Expandable title="Diagnostic">
+    <ResponseField name="range" type="object">
+      Location of the issue
+      
+      <Expandable title="Range">
+        <ResponseField name="start" type="object">
+          Start position (`line`, `character`)
+        </ResponseField>
+        <ResponseField name="end" type="object">
+          End position (`line`, `character`)
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+
+    <ResponseField name="severity" type="number">
+      Severity level: `1` (Error), `2` (Warning), `3` (Information), `4` (Hint)
+    </ResponseField>
+
+    <ResponseField name="code" type="string">
+      Error code (e.g., `undefined-variable`, `type-mismatch`)
+    </ResponseField>
+
+    <ResponseField name="message" type="string">
+      Human-readable description of the issue
+    </ResponseField>
+
+    <ResponseField name="source" type="string">
+      Always `Pylance` for this server
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="errorCount" type="number">
+  Total number of errors
+</ResponseField>
+
+<ResponseField name="warningCount" type="number">
+  Total number of warnings
+</ResponseField>
+
+## Example Request
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://pylancemcp.com/v1/tools/call \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "get_diagnostics",
+    "arguments": {
+      "uri": "file:///workspace/app/views.py"
+    }
+  }'
+```
+
+```python Python
+from pylance_mcp import Client
+
+client = Client(api_key="YOUR_API_KEY")
+
+diagnostics = client.get_diagnostics(
+    uri="file:///workspace/app/views.py"
+)
+
+print(f"Errors: {diagnostics.error_count}")
+print(f"Warnings: {diagnostics.warning_count}")
+
+for diag in diagnostics.diagnostics:
+    severity = ["", "ERROR", "WARNING", "INFO", "HINT"][diag.severity]
+    print(f"{severity} at line {diag.range.start.line + 1}: {diag.message}")
+```
+
+```javascript JavaScript
+import { PylanceMCP } from '@pylance-mcp/client';
+
+const client = new PylanceMCP({ apiKey: 'YOUR_API_KEY' });
+
+const diagnostics = await client.getDiagnostics({
+  uri: 'file:///workspace/app/views.py'
+});
+
+console.log(`Errors: ${diagnostics.errorCount}`);
+console.log(`Warnings: ${diagnostics.warningCount}`);
+
+diagnostics.diagnostics.forEach(diag => {
+  const severity = ["", "ERROR", "WARNING", "INFO", "HINT"][diag.severity];
+  console.log(`${severity} at line ${diag.range.start.line + 1}: ${diag.message}`);
+});
+```
+
+```typescript TypeScript
+import { PylanceMCP, DiagnosticsRequest } from '@pylance-mcp/client';
+
+const client = new PylanceMCP({ apiKey: process.env.PYLANCE_API_KEY! });
+
+const request: DiagnosticsRequest = {
+  uri: 'file:///workspace/app/views.py'
+};
+
+const diagnostics = await client.getDiagnostics(request);
+
+console.log(`Errors: ${diagnostics.errorCount}`);
+console.log(`Warnings: ${diagnostics.warningCount}`);
+
+for (const diag of diagnostics.diagnostics) {
+  const severity = ["", "ERROR", "WARNING", "INFO", "HINT"][diag.severity];
+  console.log(`${severity} at line ${diag.range.start.line + 1}: ${diag.message}`);
+}
+```
+</CodeGroup>
+
+## Example Response
+
+```json
+{
+  "diagnostics": [
+    {
+      "range": {
+        "start": { "line": 15, "character": 8 },
+        "end": { "line": 15, "character": 21 }
+      },
+      "severity": 1,
+      "code": "undefined-variable",
+      "message": "\"undefined_var\" is not defined",
+      "source": "Pylance"
+    },
+    {
+      "range": {
+        "start": { "line": 23, "character": 12 },
+        "end": { "line": 23, "character": 26 }
+      },
+      "severity": 2,
+      "code": "type-mismatch",
+      "message": "Argument of type \"str\" cannot be assigned to parameter \"amount\" of type \"int\" in function \"calculate\"",
+      "source": "Pylance"
+    },
+    {
+      "range": {
+        "start": { "line": 42, "character": 0 },
+        "end": { "line": 42, "character": 6 }
+      },
+      "severity": 3,
+      "code": "unused-import",
+      "message": "Import \"typing\" is not accessed",
+      "source": "Pylance"
+    }
+  ],
+  "errorCount": 1,
+  "warningCount": 1
+}
+```
+
+## Diagnostic Types
+
+### Errors (Severity 1)
+
+| Code | Description | Example |
+|------|-------------|---------|
+| `undefined-variable` | Variable not defined | `print(unknown_var)` |
+| `type-mismatch` | Type doesn't match expected | `calculate("5")` when expecting `int` |
+| `import-not-found` | Module cannot be imported | `import nonexistent_module` |
+| `syntax-error` | Invalid Python syntax | `def foo(` (missing closing paren) |
+| `missing-argument` | Required parameter not provided | `calculate()` when `calculate(x)` expected |
+
+### Warnings (Severity 2)
+
+| Code | Description | Example |
+|------|-------------|---------|
+| `unused-import` | Import never used | `import os` but `os` not referenced |
+| `unused-variable` | Variable assigned but never used | `temp = 5` but `temp` not used |
+| `duplicate-import` | Module imported multiple times | `import json` twice |
+| `unreachable-code` | Code that will never execute | Code after `return` |
+| `deprecated` | Using deprecated functionality | `collections.Mapping` instead of `collections.abc.Mapping` |
+
+### Information (Severity 3)
+
+| Code | Description | Example |
+|------|-------------|---------|
+| `missing-type-hint` | Type annotation missing | `def foo(x):` instead of `def foo(x: int):` |
+| `convention-violation` | Style guideline not followed | Function name not snake_case |
+
+## Use Cases
+
+### Pre-Commit Validation
+
+```python
+# Check for errors before committing
+files_to_check = get_changed_files()
+
+for file in files_to_check:
+    diagnostics = client.get_diagnostics(uri=file)
+    
+    if diagnostics.error_count > 0:
+        print(f"❌ Cannot commit: {file} has errors")
+        for diag in diagnostics.diagnostics:
+            if diag.severity == 1:
+                print(f"  Line {diag.range.start.line + 1}: {diag.message}")
+        exit(1)
+
+print("✅ All files are error-free")
+```
+
+### Continuous Monitoring
+
+```python
+# Watch for new errors as code changes
+def monitor_file(file_uri):
+    previous_errors = set()
+    
+    while True:
+        diagnostics = client.get_diagnostics(uri=file_uri)
+        current_errors = {
+            (d.range.start.line, d.message) 
+            for d in diagnostics.diagnostics 
+            if d.severity == 1
+        }
+        
+        # New errors appeared
+        new_errors = current_errors - previous_errors
+        if new_errors:
+            for line, message in new_errors:
+                print(f"🚨 New error at line {line + 1}: {message}")
+        
+        previous_errors = current_errors
+        time.sleep(2)
+```
+
+### Code Quality Metrics
+
+```python
+# Calculate code quality score
+def calculate_quality_score(workspace_files):
+    total_errors = 0
+    total_warnings = 0
+    
+    for file in workspace_files:
+        diagnostics = client.get_diagnostics(uri=file)
+        total_errors += diagnostics.error_count
+        total_warnings += diagnostics.warning_count
+    
+    # Score: 100 - (10 * errors) - (2 * warnings)
+    score = max(0, 100 - (10 * total_errors) - (2 * total_warnings))
+    
+    return {
+        "score": score,
+        "errors": total_errors,
+        "warnings": total_warnings,
+        "grade": "A" if score >= 90 else "B" if score >= 80 else "C"
+    }
+```
+
+## Filtering by Severity
+
+Get only specific severity levels:
+
+<CodeGroup>
+```python Errors Only
+diagnostics = client.get_diagnostics(
+    uri="file:///workspace/app/views.py",
+    severity="error"
+)
+
+# Only severity 1 (errors) returned
+```
+
+```python Warnings and Above
+diagnostics = client.get_diagnostics(
+    uri="file:///workspace/app/views.py"
+)
+
+# Filter client-side
+critical = [d for d in diagnostics.diagnostics if d.severity <= 2]
+```
+</CodeGroup>
+
+## Performance Tips
+
+<Tip>
+  **Incremental Updates**: Only check files that changed, not entire workspace
+</Tip>
+
+<Tip>
+  **Debounce Checks**: Wait 500ms-1s after typing stops before checking
+</Tip>
+
+<Tip>
+  **Cache Results**: Diagnostics don't change unless file changes
+</Tip>
+
+## Error Responses
+
+| Code | Reason | Solution |
+|------|--------|----------|
+| `FILE_NOT_FOUND` | File doesn't exist | Verify file path |
+| `INVALID_PYTHON` | File is not Python | Check file extension and content |
+| `PARSE_ERROR` | Cannot parse file | File has syntax errors preventing analysis |
+| `WORKSPACE_NOT_LOADED` | Workspace still loading | Wait for initialization |
+
+## Rate Limits
+
+| Tier | Requests/Hour | Requests/Day |
+|------|---------------|--------------|
+| **Free** | 20 | 100 |
+| **Hobby** | 500 | 5,000 |
+| **Pro** | 5,000 | 50,000 |
+| **Enterprise** | Unlimited | Unlimited |
+
+## Related Tools
+
+<CardGroup cols={2}>
+  <Card title="Get Code Actions" icon="bolt" href="/api-reference/tools/get-code-actions">
+    Get quick fixes for diagnostics
+  </Card>
+  <Card title="Format Document" icon="align-left" href="/api-reference/tools/format-document">
+    Auto-format code to fix style issues
+  </Card>
+  <Card title="Get Hover" icon="info-circle" href="/api-reference/tools/get-hover">
+    Get more info about errors
+  </Card>
+  <Card title="Apply Workspace Edit" icon="pen-to-square" href="/api-reference/tools/apply-workspace-edit">
+    Apply fixes automatically
+  </Card>
+</CardGroup>
